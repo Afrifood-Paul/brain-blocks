@@ -1,4 +1,4 @@
-@import "tailwindcss" source(none);
+@import "tailwindcss";
 @source "../src";
 @import "tw-animate-css";
 
@@ -40,7 +40,7 @@
   --card-foreground: oklch(1 0 0);
   --popover: oklch(0.05 0 0);
   --popover-foreground: oklch(1 0 0);
-  --primary: oklch(0.55 0.22 265);
+  --primary: #385FF4;
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.18 0 0);
   --secondary-foreground: oklch(1 0 0);
