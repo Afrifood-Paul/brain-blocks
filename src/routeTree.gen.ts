@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WithdrawalRouteImport } from './routes/withdrawal'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as PicturepuzzleRouteImport } from './routes/picturepuzzle'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as JoinchallengeRouteImport } from './routes/joinchallenge'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CreatechallengeRouteImport } from './routes/createchallenge'
 import { Route as IndexRouteImport } from './routes/index'
@@ -26,9 +28,19 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PicturepuzzleRoute = PicturepuzzleRouteImport.update({
+  id: '/picturepuzzle',
+  path: '/picturepuzzle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinchallengeRoute = JoinchallengeRouteImport.update({
+  id: '/joinchallenge',
+  path: '/joinchallenge',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -51,7 +63,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/createchallenge': typeof CreatechallengeRoute
   '/dashboard': typeof DashboardRoute
+  '/joinchallenge': typeof JoinchallengeRoute
   '/login': typeof LoginRoute
+  '/picturepuzzle': typeof PicturepuzzleRoute
   '/register': typeof RegisterRoute
   '/withdrawal': typeof WithdrawalRoute
 }
@@ -59,7 +73,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/createchallenge': typeof CreatechallengeRoute
   '/dashboard': typeof DashboardRoute
+  '/joinchallenge': typeof JoinchallengeRoute
   '/login': typeof LoginRoute
+  '/picturepuzzle': typeof PicturepuzzleRoute
   '/register': typeof RegisterRoute
   '/withdrawal': typeof WithdrawalRoute
 }
@@ -68,7 +84,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/createchallenge': typeof CreatechallengeRoute
   '/dashboard': typeof DashboardRoute
+  '/joinchallenge': typeof JoinchallengeRoute
   '/login': typeof LoginRoute
+  '/picturepuzzle': typeof PicturepuzzleRoute
   '/register': typeof RegisterRoute
   '/withdrawal': typeof WithdrawalRoute
 }
@@ -78,7 +96,9 @@ export interface FileRouteTypes {
     | '/'
     | '/createchallenge'
     | '/dashboard'
+    | '/joinchallenge'
     | '/login'
+    | '/picturepuzzle'
     | '/register'
     | '/withdrawal'
   fileRoutesByTo: FileRoutesByTo
@@ -86,7 +106,9 @@ export interface FileRouteTypes {
     | '/'
     | '/createchallenge'
     | '/dashboard'
+    | '/joinchallenge'
     | '/login'
+    | '/picturepuzzle'
     | '/register'
     | '/withdrawal'
   id:
@@ -94,7 +116,9 @@ export interface FileRouteTypes {
     | '/'
     | '/createchallenge'
     | '/dashboard'
+    | '/joinchallenge'
     | '/login'
+    | '/picturepuzzle'
     | '/register'
     | '/withdrawal'
   fileRoutesById: FileRoutesById
@@ -103,7 +127,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreatechallengeRoute: typeof CreatechallengeRoute
   DashboardRoute: typeof DashboardRoute
+  JoinchallengeRoute: typeof JoinchallengeRoute
   LoginRoute: typeof LoginRoute
+  PicturepuzzleRoute: typeof PicturepuzzleRoute
   RegisterRoute: typeof RegisterRoute
   WithdrawalRoute: typeof WithdrawalRoute
 }
@@ -124,11 +150,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/picturepuzzle': {
+      id: '/picturepuzzle'
+      path: '/picturepuzzle'
+      fullPath: '/picturepuzzle'
+      preLoaderRoute: typeof PicturepuzzleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/joinchallenge': {
+      id: '/joinchallenge'
+      path: '/joinchallenge'
+      fullPath: '/joinchallenge'
+      preLoaderRoute: typeof JoinchallengeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -159,7 +199,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreatechallengeRoute: CreatechallengeRoute,
   DashboardRoute: DashboardRoute,
+  JoinchallengeRoute: JoinchallengeRoute,
   LoginRoute: LoginRoute,
+  PicturepuzzleRoute: PicturepuzzleRoute,
   RegisterRoute: RegisterRoute,
   WithdrawalRoute: WithdrawalRoute,
 }

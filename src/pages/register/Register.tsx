@@ -23,7 +23,7 @@ const Register = () => {
    };
  
    return (
-     <main className="min-h-screen bg-black text-white px-4 pt-12 pb-10">
+     <main className="h-full bg-black text-white px-4 pt-12">
        <div className="mx-auto w-full max-w-sm ">
          {/* Top Tabs */}
          <AuthTabs active="register" />
@@ -110,7 +110,7 @@ const Register = () => {
            {/* Register Button */}
            <button
              type="submit"
-             className="mt-4 h-14 w-full rounded-full bg-blue-600 text-white font-semibold text-sm tracking-wide hover:bg-blue-500 transition"
+             className="mt-4 h-14 w-full  rounded-full bg-blue-600 text-white font-semibold text-sm tracking-wide hover:bg-blue-500 transition"
            >
              Register
            </button>
