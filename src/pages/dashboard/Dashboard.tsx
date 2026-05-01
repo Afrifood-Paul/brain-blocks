@@ -4,6 +4,8 @@ import iconPuzzle from "@/assets/puzzleIcon.png";
 import iconLudo from "@/assets/ludoIcon.png";
 import iconChess from "@/assets/chessIcon.png";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "@tanstack/react-router";
 
 
 const games = [
@@ -27,8 +29,23 @@ const directChallenges = [
 ];
 const Dashboard = () => {
   const [showBalance, setShowBalance] = useState(true);
+  
+ const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate({ to: "/login" });
+  };
+
+
   return (
     <main className="min-h-screen bg-background px-4 py-5">
+      <div className="flex - justify-end mr-2">
+         <button  onClick={handleLogout} className="bg-gradient-to-br from-[#dfe7ff] to-[#c9d6ff] text-slate-900 relative text-[#B6D8FF] text-xs font-semibold px-4 py-2 mb-2 rounded-full">
+              Logout
+            </button>
+      </div>
       <div className="max-w-md mx-auto space-y-5">
         {/* Wallet Card */}
         <div className="rounded-3xl p-5 bg-gradient-to-br from-[#dfe7ff] to-[#c9d6ff] text-slate-900 relative overflow-hidden">
@@ -50,7 +67,7 @@ const Dashboard = () => {
                 </button>
               </div>
             </div>
-            <button className="bg-[#5Ehfce] text-[#B6D8FF] text-xs font-semibold px-4 py-2 rounded-full">
+            <button className="bg-[#0B2177] text-[#B6D8FF] text-xs font-semibold px-4 py-2 rounded-full">
               Withdraw
             </button>
           </div>

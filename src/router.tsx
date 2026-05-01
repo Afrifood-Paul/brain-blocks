@@ -1,5 +1,13 @@
+import { useEffect, type ReactNode } from "react";
 import { createRouter, useRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import type { RouterContext } from "./router/context";
+import {
+  AuthProvider,
+  initialAuthContext,
+  useAuth,
+} from "./context/AuthContext";
+
 
 function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
@@ -54,10 +62,31 @@ function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => vo
   );
 }
 
+function AuthRouterSync({ children }: { children: ReactNode }) {
+  const auth = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    router.update({
+      ...router.options,
+      context: {
+        ...router.options.context,
+        auth,
+      },
+    });
+
+    router.invalidate();
+  }, [auth, router]);
+
+  return <>{children}</>;
+}
+
 export const getRouter = () => {
   const router = createRouter({
     routeTree,
-    context: {},
+    context: { auth: initialAuthContext } satisfies RouterContext,
+    Wrap: AuthProvider,
+    InnerWrap: AuthRouterSync,
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
     defaultErrorComponent: DefaultErrorComponent,

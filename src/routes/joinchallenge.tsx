@@ -1,6 +1,13 @@
 import Joinchallenge from "@/pages/joinchallenge/Joinchallenge";
 import { createFileRoute } from "@tanstack/react-router";
+import { requireAuth } from "@/router/guards";
+import { ProtectedRoute } from "@/router/ProtectedRoute";
 
 export const Route = createFileRoute("/joinchallenge")({
-  component: Joinchallenge,
+  beforeLoad: requireAuth,
+  component: () => (
+    <ProtectedRoute>
+      <Joinchallenge />
+    </ProtectedRoute>
+  ),
 });
