@@ -14,16 +14,22 @@ type User = {
   email: string;
 };
 
+type RegisterData = {
+  firstName: string;
+  lastName: string;
+  username?: string;
+  email: string;
+  password: string;
+  dob?: string;
+  phone?: string;
+};
+
 export type AuthContextType = {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (
-    name: string,
-    email: string,
-    password: string
-  ) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => void;
 };
 
@@ -86,15 +92,11 @@ export const AuthProvider = ({
     }
   };
 
-  const register = async (
-    name: string,
-    email: string,
-    password: string
-  ) => {
+  const register = async (data: RegisterData) => {
     setLoading(true);
 
     try {
-      const res = await apiClient.register(name, email, password);
+      const res = await apiClient.register(data);
       setUser(res.user);
     } finally {
       setLoading(false);

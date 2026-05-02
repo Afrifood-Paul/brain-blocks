@@ -1,75 +1,125 @@
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { Chess } from "chess.js";
-import { socket } from "../services/socket";
+import { connectSocket, socket } from "../services/socket";
 
-// ✅ 1. Define context type
+type PlayerColor = "w" | "b";
+
 type GameContextType = {
   game: Chess;
   turn: string;
-  players: string[];
-  whiteTime: number;
-  blackTime: number;
+  players: any;
+  playerColor: PlayerColor | null;
+  status: string;
+  winnerColor: PlayerColor | null;
+  winner: any;
+  moveHistory: any[];
+  sharedTime: number;
+  timerStartedAt: string | null;
   joinGame: (id: string) => void;
-  makeMove: (move: any) => void;
+  makeMove: (move: any) => boolean;
 };
 
-// ✅ 2. Fix context typing
 const GameContext = createContext<GameContextType | null>(null);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [game, setGame] = useState(new Chess());
   const [gameId, setGameId] = useState<string | null>(null);
-  const [players, setPlayers] = useState<string[]>([]);
+  const gameIdRef = useRef<string | null>(null);
+  const playerColorRef = useRef<PlayerColor | null>(null);
+  const statusRef = useRef("active");
+  const currentFenRef = useRef(game.fen());
+  const [players, setPlayers] = useState<any>(null);
+  const [playerColor, setPlayerColor] = useState<PlayerColor | null>(null);
+  const [status, setStatus] = useState("active");
+  const [winnerColor, setWinnerColor] = useState<PlayerColor | null>(null);
+  const [winner, setWinner] = useState<any>(null);
+  const [moveHistory, setMoveHistory] = useState<any[]>([]);
   const [turn, setTurn] = useState("w");
-  const [whiteTime, setWhiteTime] = useState(600);
-  const [blackTime, setBlackTime] = useState(600);
+  const [sharedTime, setSharedTime] = useState(600);
+  const [timerStartedAt, setTimerStartedAt] = useState<string | null>(null);
 
   useEffect(() => {
-    socket.connect();
+    playerColorRef.current = playerColor;
+  }, [playerColor]);
 
-    socket.on("game-state", (data: any) => {
-      const newGame = new Chess(data.fen);
-      setGame(newGame);
-      setTurn(newGame.turn());
-      setPlayers(data.players);
-      setWhiteTime(data.whiteTime);
-      setBlackTime(data.blackTime);
-    });
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
-    socket.on("move", ({ fen }: any) => {
-      const newGame = new Chess(fen);
-      setGame(newGame);
-      setTurn(newGame.turn());
-    });
+  useEffect(() => {
+    connectSocket();
 
-    socket.on("timer", ({ whiteTime, blackTime }: any) => {
-      setWhiteTime(whiteTime);
-      setBlackTime(blackTime);
-    });
+    const applyServerState = (data: any) => {
+      if (!data || data.error) return;
+
+      if (data.boardState || data.fen) {
+        const nextFen = data.boardState || data.fen;
+        const nextGame = new Chess(nextFen);
+
+        if (nextFen !== currentFenRef.current) {
+          currentFenRef.current = nextFen;
+          setGame(nextGame);
+        }
+
+        setTurn(data.currentTurn || nextGame.turn());
+      } else if (data.currentTurn) {
+        setTurn(data.currentTurn);
+      }
+
+      setPlayers(data.players || null);
+      setPlayerColor(data.playerColor ?? playerColorRef.current);
+      setStatus(data.status || "active");
+      setWinnerColor(data.winnerColor || null);
+      setWinner(data.winner || null);
+      setMoveHistory(data.moveHistory || []);
+
+      if (typeof data.sharedTime === "number") setSharedTime(data.sharedTime);
+      setTimerStartedAt(data.timerStartedAt || null);
+    };
+
+    socket.on("game_state", applyServerState);
+    socket.on("move_made", applyServerState);
+    socket.on("game_over", applyServerState);
 
     return () => {
+      socket.off("game_state", applyServerState);
+      socket.off("move_made", applyServerState);
+      socket.off("game_over", applyServerState);
       socket.disconnect();
     };
   }, []);
 
-  // ✅ 3. Fix incorrect type
-  const joinGame = (id: string) => {
+  const joinGame = useCallback((id: string) => {
     setGameId(id);
-    socket.emit("join-game", id);
-  };
+    gameIdRef.current = id;
+    connectSocket();
+    socket.emit("join_game", { gameId: id });
+  }, []);
 
-  const makeMove = (move: any) => {
-    socket.emit("move", {
-      gameId,
+  const makeMove = useCallback((move: any) => {
+    if (
+      !gameIdRef.current ||
+      statusRef.current !== "active" ||
+      !socket.connected
+    ) {
+      return false;
+    }
+
+    socket.emit("make_move", {
+      gameId: gameIdRef.current,
       move,
     });
-  };
+
+    return true;
+  }, []);
 
   return (
     <GameContext.Provider
@@ -77,8 +127,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         game,
         turn,
         players,
-        whiteTime,
-        blackTime,
+        playerColor,
+        status,
+        winnerColor,
+        winner,
+        moveHistory,
+        sharedTime,
+        timerStartedAt,
         joinGame,
         makeMove,
       }}
@@ -88,7 +143,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// ✅ 4. Safe hook
 export const useGame = () => {
   const context = useContext(GameContext);
 

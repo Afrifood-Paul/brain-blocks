@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import { Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/context/AuthContext";
+import { storeAuthRedirect } from "@/services/authRedirect";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const auth = useAuth();
@@ -14,6 +15,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   }
 
   if (!auth.isAuthenticated) {
+    storeAuthRedirect();
     return <Navigate to="/login" replace />;
   }
 

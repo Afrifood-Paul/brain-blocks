@@ -33,9 +33,19 @@ exports.register = async (req, res) => {
       phone,
     });
 
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    const safeUser = user.toObject();
+    delete safeUser.passwordHash;
+
     res.status(201).json({
       msg: "User created successfully",
-      user,
+      token,
+      user: safeUser,
     });
   } catch (err) {
     res.status(500).json({
@@ -67,5 +77,4 @@ exports.login = async (req, res) => {
 
   res.json({ token, user });
 };
-
 

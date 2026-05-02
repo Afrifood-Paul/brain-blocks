@@ -97,6 +97,19 @@ class ApiClient {
     return this.request("/auth/me");
   }
 
+  async createGame(data: {
+    gameType: string;
+    amount: string;
+    duration: string;
+    directChallenge: boolean;
+    opponentUsername?: string;
+  }) {
+    return this.request("/game/create", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
   logout() {
     this.setToken(null);
   }

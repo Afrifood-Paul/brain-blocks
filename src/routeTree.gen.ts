@@ -17,6 +17,7 @@ import { Route as JoinchallengeRouteImport } from './routes/joinchallenge'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CreatechallengeRouteImport } from './routes/createchallenge'
 import { Route as ChessboardRouteImport } from './routes/chessboard'
+import { Route as ChessRouteImport } from './routes/chess'
 import { Route as IndexRouteImport } from './routes/index'
 
 const WithdrawalRoute = WithdrawalRouteImport.update({
@@ -59,6 +60,11 @@ const ChessboardRoute = ChessboardRouteImport.update({
   path: '/chessboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChessRoute = ChessRouteImport.update({
+  id: '/chess',
+  path: '/chess',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -67,6 +73,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chess': typeof ChessRoute
   '/chessboard': typeof ChessboardRoute
   '/createchallenge': typeof CreatechallengeRoute
   '/dashboard': typeof DashboardRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chess': typeof ChessRoute
   '/chessboard': typeof ChessboardRoute
   '/createchallenge': typeof CreatechallengeRoute
   '/dashboard': typeof DashboardRoute
@@ -90,6 +98,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/chess': typeof ChessRoute
   '/chessboard': typeof ChessboardRoute
   '/createchallenge': typeof CreatechallengeRoute
   '/dashboard': typeof DashboardRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/chess'
     | '/chessboard'
     | '/createchallenge'
     | '/dashboard'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/chess'
     | '/chessboard'
     | '/createchallenge'
     | '/dashboard'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/chess'
     | '/chessboard'
     | '/createchallenge'
     | '/dashboard'
@@ -137,6 +149,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChessRoute: typeof ChessRoute
   ChessboardRoute: typeof ChessboardRoute
   CreatechallengeRoute: typeof CreatechallengeRoute
   DashboardRoute: typeof DashboardRoute
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChessboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chess': {
+      id: '/chess'
+      path: '/chess'
+      fullPath: '/chess'
+      preLoaderRoute: typeof ChessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -217,6 +237,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChessRoute: ChessRoute,
   ChessboardRoute: ChessboardRoute,
   CreatechallengeRoute: CreatechallengeRoute,
   DashboardRoute: DashboardRoute,

@@ -109,7 +109,7 @@ const Dashboard = () => {
         </div>
 
         {/* Create Challenge */}
-        <button className="w-full bg-[#9FC8F6] text-white font-semibold py-4 rounded-full flex items-center  justify-between px-6">
+        <button onClick={() => navigate({ to: "/createchallenge" })} className="w-full bg-[#9FC8F6] text-white font-semibold py-4 rounded-full flex items-center  justify-between px-6">
           <span className="text-[#0B2177]">Create Challenge</span>
           <span className="w-7 h-7 rounded-full bg-[#385FF4] flex items-center justify-center">
             <Plus className="w-4 h-4 text-white" strokeWidth={3} />

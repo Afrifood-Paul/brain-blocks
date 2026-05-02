@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { AuthTabs } from "@/components/AuthTabs";
 import { CheckCircle2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { apiClient } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
+import { consumeAuthRedirect } from "@/services/authRedirect";
 
 
 const Register = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,17 +58,17 @@ const Register = () => {
     try {
       setLoading(true);
 
-    await apiClient.register({
-  firstName,
-  lastName,
-  username,
-  email,
-  password,
-  dob,
-  phone,
-});
+      await register({
+        firstName,
+        lastName,
+        username,
+        email,
+        password,
+        dob,
+        phone,
+      });
 
-      navigate({ to: "/login", replace: true });
+      navigate({ to: consumeAuthRedirect() || "/dashboard", replace: true });
     } catch (err: any) {
       setError(err.message || "Registration failed");
     } finally {

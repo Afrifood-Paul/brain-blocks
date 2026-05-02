@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { AuthTabs } from "@/components/AuthTabs";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/context/AuthContext";
+import { consumeAuthRedirect } from "@/services/authRedirect";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate({ to: "/dashboard", replace: true });
+      navigate({ to: consumeAuthRedirect() || "/dashboard", replace: true });
     }
   }, [isAuthenticated, navigate]);
 
