@@ -22,6 +22,7 @@ exports.register = async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
+    const avatar = req.file ? `/uploads/${req.file.filename}` : "";
 
     const user = await User.create({
       firstName,
@@ -31,6 +32,7 @@ exports.register = async (req, res) => {
       passwordHash: hashed,
       dob,
       phone,
+      avatar,
     });
 
     const token = jwt.sign(
@@ -77,4 +79,3 @@ exports.login = async (req, res) => {
 
   res.json({ token, user });
 };
-

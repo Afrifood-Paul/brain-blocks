@@ -1,5 +1,7 @@
-const API_BASE_URL =
+export const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
 
 const TOKEN_KEY = "brain_token";
 
@@ -29,9 +31,13 @@ class ApiClient {
   }
 
   async request(endpoint: string, options: RequestInit = {}) {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
+    const isFormData =
+      typeof FormData !== "undefined" && options.body instanceof FormData;
+    const headers: Record<string, string> = isFormData
+      ? {}
+      : {
+          "Content-Type": "application/json",
+        };
 
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
@@ -67,10 +73,22 @@ class ApiClient {
     password: string;
     dob?: string;
     phone?: string;
+    avatar?: File | null;
   }) {
+    const body = new FormData();
+    body.append("firstName", data.firstName);
+    body.append("lastName", data.lastName);
+    body.append("email", data.email);
+    body.append("password", data.password);
+
+    if (data.username) body.append("username", data.username);
+    if (data.dob) body.append("dob", data.dob);
+    if (data.phone) body.append("phone", data.phone);
+    if (data.avatar) body.append("avatar", data.avatar);
+
     const res = await this.request("/auth/register", {
       method: "POST",
-      body: JSON.stringify(data),
+      body,
     });
 
     if (res?.token) {

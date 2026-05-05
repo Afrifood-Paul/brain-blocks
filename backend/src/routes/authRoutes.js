@@ -1,8 +1,19 @@
 const router = require("express").Router();
 const { register, login } = require("../controllers/authController");
 const { requireAuth } = require("../middleware/auth");
+const { uploadAvatar } = require("../middleware/upload");
 
-router.post("/register", register);
+const handleAvatarUpload = (req, res, next) => {
+  uploadAvatar.single("avatar")(req, res, (err) => {
+    if (!err) return next();
+
+    return res.status(400).json({
+      msg: err.message || "Invalid avatar upload",
+    });
+  });
+};
+
+router.post("/register", handleAvatarUpload, register);
 router.post("/login", login);
 
 

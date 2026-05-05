@@ -120,13 +120,15 @@ const resolveStatus = (chess) => {
 const getUserProfile = async (userId) => {
   if (!userId) return {};
 
-  const user = await User.findById(userId).select("firstName lastName username");
+  const user = await User.findById(userId).select(
+    "firstName lastName username avatar"
+  );
   if (!user) return {};
 
   return {
     username: user.username,
     name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username,
-    avatar: null,
+    avatar: user.avatar || "",
   };
 };
 

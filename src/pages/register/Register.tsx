@@ -12,6 +12,7 @@ const Register = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [avatar, setAvatar] = useState<File | null>(null);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -66,6 +67,7 @@ const Register = () => {
         password,
         dob,
         phone,
+        avatar,
       });
 
       navigate({ to: consumeAuthRedirect() || "/dashboard", replace: true });
@@ -154,6 +156,13 @@ const Register = () => {
               <CheckCircle2 className="h-5 w-5 fill-lime-400 text-whit drop-shadow-sm" />
             </div>
           </div>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setAvatar(e.target.files?.[0] || null)}
+            className="block w-full cursor-pointer rounded-full bg-white text-sm text-black file:mr-4 file:h-12 file:border-0 file:bg-blue-600 file:px-5 file:text-sm file:font-semibold file:text-white"
+          />
 
           {/* Error (ONLY ADDITION TO UI) */}
           {error && (

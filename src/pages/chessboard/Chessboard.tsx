@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { Chessboard as Board } from "react-chessboard";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
+import defaultAvatar from "@/assets/chessIcon.png";
+import { API_ORIGIN } from "@/services/api";
 
 const Chessboard = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -30,8 +32,11 @@ const Chessboard = () => {
   const getDisplayName = (player: any, fallback: string) =>
     player?.name || player?.username || fallback;
 
-  const getInitial = (player: any, fallback: string) =>
-    getDisplayName(player, fallback).charAt(0).toUpperCase();
+  const getAvatarSrc = (avatar?: string | null) => {
+    if (!avatar) return defaultAvatar;
+    if (/^https?:\/\//i.test(avatar)) return avatar;
+    return avatar.startsWith("/") ? `${API_ORIGIN}${avatar}` : avatar;
+  };
 
   const renderPlayer = (
     player: any,
@@ -40,16 +45,12 @@ const Chessboard = () => {
   ) => (
     <div className="w-full max-w-[560px] flex items-center justify-between rounded-md  px-4 py-3">
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-[#9FC8F6] border border-[#008FF0] text-[#0B2177] flex items-center justify-center font-semibold overflow-hidden">
-          {player?.avatar ? (
-            <img
-              src={player.avatar}
-              alt={getDisplayName(player, fallbackName)}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            getInitial(player, fallbackName)
-          )}
+        <div className="h-14 w-14 rounded-full bg-[#9FC8F6] border border-4 border-[#008FF0] overflow-hidden">
+          <img
+            src={getAvatarSrc(player?.avatar)}
+            alt={getDisplayName(player, fallbackName)}
+            className="h-full w-full object-cover"
+          />
         </div>
         <div>
           <div className="font-bold text-xl text-white leading-tight">
@@ -60,7 +61,7 @@ const Chessboard = () => {
           </div>
         </div>
       </div>
-      <div className="m-3 px-6 py-3 rounded border border-[#008FF0] bg-[#46597A] ">
+      <div className="m-3 px-6 py-3 rounded border border-1 border-[#008FF0] bg-[#46597A] ">
         <span className="text-foreground font-mono font-bold text-lg tabular-nums">
           {formatTime(sharedTime)}
         </span>
@@ -115,6 +116,7 @@ const Chessboard = () => {
       promotion: "q",
     });
   };
+  const boardSize = Math.min(window.innerWidth, window.innerHeight) * 0.8;
 
   return (
     <div className="bg-black min-h-screen flex flex-col items-center justify-center text-white">
@@ -125,14 +127,33 @@ const Chessboard = () => {
         turn === opponentColor
       )}
 
-      <Board
-        position={game.fen()}
-        onPieceDrop={onDrop}
-        boardOrientation={playerColor === "b" ? "black" : "white"}
-        customLightSquareStyle={{ backgroundColor: "#f8faf0" }}
-        customDarkSquareStyle={{ backgroundColor: "#3f7f46" }}
-      />
+     
 
+      {/* <div className=" flex justify-center items-center">
+  <Board
+    position={game.fen()}
+    onPieceDrop={onDrop}
+    boardOrientation={playerColor === "b" ? "black" : "white"}
+    boardWidth={boardSize}
+    customLightSquareStyle={{ backgroundColor: "#F1E4D1" }}
+    customDarkSquareStyle={{ backgroundColor: "#318B4A" }}
+  />
+</div> */}
+
+<div className="w-full flex justify-center">
+  <div className="border-10 border-[#333333] overflow-hidden">
+    <Board
+      position={game.fen()}
+      onPieceDrop={onDrop}
+      boardOrientation={playerColor === "b" ? "black" : "white"}
+      boardWidth={boardSize}
+      customLightSquareStyle={{ backgroundColor: "#F1E4D1" }}
+      customDarkSquareStyle={{ backgroundColor: "#318B4A" }}
+    />
+  </div>
+</div>
+
+     
       {renderPlayer(
         currentPlayer,
         currentColor === "w" ? "White" : "Black",
@@ -146,16 +167,12 @@ const Chessboard = () => {
               <h2 className="text-2xl font-bold">Game Draw</h2>
             ) : (
               <>
-                <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-[#9FC8F6] text-[#0B2177] flex items-center justify-center text-2xl font-bold overflow-hidden">
-                  {winnerPlayer?.avatar ? (
-                    <img
-                      src={winnerPlayer.avatar}
-                      alt={getDisplayName(winnerPlayer, "Winner")}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    getInitial(winnerPlayer, "Winner")
-                  )}
+                <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-[#9FC8F6] overflow-hidden">
+                  <img
+                    src={getAvatarSrc(winnerPlayer?.avatar)}
+                    alt={getDisplayName(winnerPlayer, "Winner")}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <h2 className="text-2xl font-bold">
                   {getDisplayName(

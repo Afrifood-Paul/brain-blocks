@@ -64,7 +64,7 @@ exports.createGame = async (req, res) => {
         socketId: null,
         username: req.user.username,
         name: `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() || req.user.username,
-        avatar: null,
+        avatar: req.user.avatar || "",
       },
       black: null,
     },

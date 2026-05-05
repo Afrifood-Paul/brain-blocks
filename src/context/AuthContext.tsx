@@ -12,6 +12,7 @@ type User = {
   id: string;
   name: string;
   email: string;
+  avatar?: string | null;
 };
 
 type RegisterData = {
@@ -22,6 +23,7 @@ type RegisterData = {
   password: string;
   dob?: string;
   phone?: string;
+  avatar?: File | null;
 };
 
 export type AuthContextType = {
