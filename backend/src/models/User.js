@@ -60,6 +60,31 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    wallet: {
+      coins: { type: Number, default: 0 },
+      balance: { type: Number },
+    },
+
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      uppercase: true,
+      trim: true,
+      index: true,
+    },
+
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    referralRewarded: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

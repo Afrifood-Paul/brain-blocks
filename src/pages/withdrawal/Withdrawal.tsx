@@ -18,10 +18,10 @@ const Withdrawal = () => {
           </button>
 
           <div className="text-right leading-tight">
-            <p className="text-[14px] text-white font-medium">Wallet Balance</p>
+            <p className="text-[14px] text-white font-medium">Coin Balance</p>
             <p className="mt-1 text-sm font-semibold text-white">
               {" "}
-              {showBalance ? "₦128,390,00.00" : "••••••••••"}
+              {showBalance ? "1,000 coins" : "••••••••••"}
             </p>
             <button
               type="button"
@@ -70,7 +70,7 @@ const Withdrawal = () => {
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="Add Amount"
+            placeholder="Coin Amount"
             className="h-12 w-full rounded-full bg-[#e7e7e7] px-5 text-xs text-black placeholder:text-gray-400 outline-none border border-transparent focus:border-blue-500 transition"
           />
 

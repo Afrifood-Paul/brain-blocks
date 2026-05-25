@@ -12,5 +12,10 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/game", require("./routes/gameRoutes"));
+app.use("/api/wallet", require("./routes/walletRoutes"));
+app.use("/api/ludo", require("./routes/ludoRoutes"));
+app.use("/api/marketplace", require("./routes/marketplaceRoutes"));
+app.use("/api/packages", require("./routes/packageRoutes"));
+app.use("/api/purchase", require("./routes/purchaseRoutes"));
 
 module.exports = app;

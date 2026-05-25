@@ -7,6 +7,7 @@ import {
   initialAuthContext,
   useAuth,
 } from "./context/AuthContext";
+import { WalletProvider } from "./context/WalletContext";
 
 
 function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
@@ -85,7 +86,11 @@ export const getRouter = () => {
   const router = createRouter({
     routeTree,
     context: { auth: initialAuthContext } satisfies RouterContext,
-    Wrap: AuthProvider,
+    Wrap: ({ children }: { children: ReactNode }) => (
+      <AuthProvider>
+        <WalletProvider>{children}</WalletProvider>
+      </AuthProvider>
+    ),
     InnerWrap: AuthRouterSync,
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,

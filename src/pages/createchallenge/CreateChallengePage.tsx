@@ -3,9 +3,11 @@ import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { apiClient } from "@/services/api";
+import { useWallet } from "@/context/WalletContext";
 
 function CreateChallengePage() {
  const navigate = useNavigate();
+ const { setLocalCoins } = useWallet();
  const [directChallenge, setDirectChallenge] = useState(false);
  const [gameType, setGameType] = useState("");
  const [amount, setAmount] = useState("");
@@ -28,8 +30,8 @@ function CreateChallengePage() {
 
    setError(null);
 
-   if (gameType !== "Chess" || !amount || !duration || duration === "Set Play Duration") {
-     setError("Choose Chess, amount, and duration.");
+   if (!["Chess", "Ludo"].includes(gameType) || !amount || !duration || duration === "Set Play Duration") {
+     setError("Choose Chess or Ludo, amount, and duration.");
      return;
    }
 
@@ -40,14 +42,24 @@ function CreateChallengePage() {
 
    try {
      setCreating(true);
-     const result = await apiClient.createGame({
-       gameType,
-       amount,
-       duration,
-       directChallenge,
-       opponentUsername: opponentUsername.trim(),
-     });
+     const result =
+       gameType === "Ludo"
+         ? await apiClient.createLudoRoom({
+             betAmount: Number(amount),
+             maxPlayers: 2,
+             turnSeconds: 25,
+           })
+         : await apiClient.createGame({
+             gameType,
+             amount,
+             duration,
+             directChallenge,
+             opponentUsername: opponentUsername.trim(),
+           });
 
+     if (typeof result.coins === "number") {
+       setLocalCoins(result.coins);
+     }
      setCreatedGame(result);
    } catch (err) {
      setError(err instanceof Error ? err.message : "Could not create game.");
@@ -96,7 +108,7 @@ function CreateChallengePage() {
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="Add Amount"
+          placeholder="Coin Amount"
           className="w-full bg-white text-[#0B2177] px-4 py-3 rounded-full outline-none"
         />
 
@@ -180,7 +192,7 @@ function CreateChallengePage() {
 
             <div className="grid grid-cols-2 gap-3">
               <a
-                href={`mailto:?subject=Chess Challenge&body=${encodeURIComponent(fullInviteLink)}`}
+                href={`mailto:?subject=${gameType} Challenge&body=${encodeURIComponent(fullInviteLink)}`}
                 className="bg-[#9FC8F6] text-[#0B2177] py-3 rounded-full font-semibold text-center"
               >
                 Email

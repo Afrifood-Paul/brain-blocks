@@ -6,6 +6,7 @@ const app = require("./app");
 const connectDB = require("./config/db");
 const { Server } = require("socket.io");
 const chessSocket = require("./sockets/chess.socket");
+const ludoSocket = require("./sockets/ludo.socket");
 
 connectDB();
 
@@ -22,6 +23,7 @@ const io = new Server(server, {
 
 // initialize socket logic
 chessSocket(io);
+ludoSocket(io);
 
 // start server
 server.listen(5000, () => {

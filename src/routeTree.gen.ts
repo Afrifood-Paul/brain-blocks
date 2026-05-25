@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WithdrawalRouteImport } from './routes/withdrawal'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PicturepuzzleRouteImport } from './routes/picturepuzzle'
+import { Route as MarketplaceRouteImport } from './routes/marketplace'
+import { Route as LudoRouteImport } from './routes/ludo'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinchallengeRouteImport } from './routes/joinchallenge'
 import { Route as FundwalletRouteImport } from './routes/fundwallet'
@@ -34,6 +36,16 @@ const RegisterRoute = RegisterRouteImport.update({
 const PicturepuzzleRoute = PicturepuzzleRouteImport.update({
   id: '/picturepuzzle',
   path: '/picturepuzzle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketplaceRoute = MarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LudoRoute = LudoRouteImport.update({
+  id: '/ludo',
+  path: '/ludo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -86,6 +98,8 @@ export interface FileRoutesByFullPath {
   '/fundwallet': typeof FundwalletRoute
   '/joinchallenge': typeof JoinchallengeRoute
   '/login': typeof LoginRoute
+  '/ludo': typeof LudoRoute
+  '/marketplace': typeof MarketplaceRoute
   '/picturepuzzle': typeof PicturepuzzleRoute
   '/register': typeof RegisterRoute
   '/withdrawal': typeof WithdrawalRoute
@@ -99,6 +113,8 @@ export interface FileRoutesByTo {
   '/fundwallet': typeof FundwalletRoute
   '/joinchallenge': typeof JoinchallengeRoute
   '/login': typeof LoginRoute
+  '/ludo': typeof LudoRoute
+  '/marketplace': typeof MarketplaceRoute
   '/picturepuzzle': typeof PicturepuzzleRoute
   '/register': typeof RegisterRoute
   '/withdrawal': typeof WithdrawalRoute
@@ -113,6 +129,8 @@ export interface FileRoutesById {
   '/fundwallet': typeof FundwalletRoute
   '/joinchallenge': typeof JoinchallengeRoute
   '/login': typeof LoginRoute
+  '/ludo': typeof LudoRoute
+  '/marketplace': typeof MarketplaceRoute
   '/picturepuzzle': typeof PicturepuzzleRoute
   '/register': typeof RegisterRoute
   '/withdrawal': typeof WithdrawalRoute
@@ -128,6 +146,8 @@ export interface FileRouteTypes {
     | '/fundwallet'
     | '/joinchallenge'
     | '/login'
+    | '/ludo'
+    | '/marketplace'
     | '/picturepuzzle'
     | '/register'
     | '/withdrawal'
@@ -141,6 +161,8 @@ export interface FileRouteTypes {
     | '/fundwallet'
     | '/joinchallenge'
     | '/login'
+    | '/ludo'
+    | '/marketplace'
     | '/picturepuzzle'
     | '/register'
     | '/withdrawal'
@@ -154,6 +176,8 @@ export interface FileRouteTypes {
     | '/fundwallet'
     | '/joinchallenge'
     | '/login'
+    | '/ludo'
+    | '/marketplace'
     | '/picturepuzzle'
     | '/register'
     | '/withdrawal'
@@ -168,6 +192,8 @@ export interface RootRouteChildren {
   FundwalletRoute: typeof FundwalletRoute
   JoinchallengeRoute: typeof JoinchallengeRoute
   LoginRoute: typeof LoginRoute
+  LudoRoute: typeof LudoRoute
+  MarketplaceRoute: typeof MarketplaceRoute
   PicturepuzzleRoute: typeof PicturepuzzleRoute
   RegisterRoute: typeof RegisterRoute
   WithdrawalRoute: typeof WithdrawalRoute
@@ -194,6 +220,20 @@ declare module '@tanstack/react-router' {
       path: '/picturepuzzle'
       fullPath: '/picturepuzzle'
       preLoaderRoute: typeof PicturepuzzleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketplace': {
+      id: '/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof MarketplaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ludo': {
+      id: '/ludo'
+      path: '/ludo'
+      fullPath: '/ludo'
+      preLoaderRoute: typeof LudoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -264,6 +304,8 @@ const rootRouteChildren: RootRouteChildren = {
   FundwalletRoute: FundwalletRoute,
   JoinchallengeRoute: JoinchallengeRoute,
   LoginRoute: LoginRoute,
+  LudoRoute: LudoRoute,
+  MarketplaceRoute: MarketplaceRoute,
   PicturepuzzleRoute: PicturepuzzleRoute,
   RegisterRoute: RegisterRoute,
   WithdrawalRoute: WithdrawalRoute,

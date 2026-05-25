@@ -70,3 +70,110 @@
       sans-serif;
   }
 }
+
+@keyframes ludoDiceRoll {
+  0% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+  }
+  35% {
+    transform: translateY(-12px) rotateX(140deg) rotateY(110deg) rotateZ(18deg);
+  }
+  70% {
+    transform: translateY(4px) rotateX(260deg) rotateY(220deg) rotateZ(-12deg);
+  }
+  100% {
+    transform: translateY(0) rotateX(360deg) rotateY(360deg) rotateZ(0deg);
+  }
+}
+
+@keyframes ludoPulse {
+  0%,
+  100% {
+    opacity: 0.24;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes ludoMovable {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+
+@keyframes ludoCaptured {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes ludoHighlight {
+  0%,
+  100% {
+    opacity: 0.16;
+  }
+  50% {
+    opacity: 0.34;
+  }
+}
+
+@keyframes ludoWinPop {
+  0% {
+    transform: translateY(10px) scale(0.92);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.ludo-dice-rolling {
+  animation: ludoDiceRoll 0.72s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  transform-style: preserve-3d;
+}
+
+.ludo-token {
+  transition:
+    transform 120ms ease,
+    opacity 180ms ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.ludo-token-movable {
+  animation: ludoMovable 0.9s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.85));
+}
+
+.ludo-token-moving {
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.34));
+}
+
+.ludo-token-captured {
+  animation: ludoCaptured 0.34s ease forwards;
+}
+
+.ludo-turn-ring {
+  animation: ludoPulse 1s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.ludo-path-highlight {
+  animation: ludoHighlight 0.9s ease-in-out infinite;
+}
+
+.ludo-result-pop {
+  animation: ludoWinPop 0.36s ease-out both;
+}

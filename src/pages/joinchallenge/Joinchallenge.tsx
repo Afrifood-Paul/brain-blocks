@@ -46,11 +46,11 @@ const Joinchallenge = () => {
         </div>
 
         <div className="mt-6 w-full bg-input rounded-full px-6 py-4">
-          <span className="text-muted-foreground text-base">N500</span>
+          <span className="text-muted-foreground text-base">500 coins</span>
         </div>
 
         <p className="text-muted-foreground text-xs text-center mt-3">
-          If you win the Challenge you will get N900 credited into your account
+          If you win the Challenge you will get 900 coins credited into your account
         </p>
 
         <button

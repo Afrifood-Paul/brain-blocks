@@ -13,6 +13,11 @@ type User = {
   name: string;
   email: string;
   avatar?: string | null;
+  referralCode?: string;
+  wallet?: {
+    coins?: number;
+    balance?: number;
+  };
 };
 
 type RegisterData = {
@@ -23,6 +28,8 @@ type RegisterData = {
   password: string;
   dob?: string;
   phone?: string;
+  state: string;
+  referralCode?: string;
   avatar?: File | null;
 };
 

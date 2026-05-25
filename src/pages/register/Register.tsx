@@ -4,7 +4,7 @@ import { CheckCircle2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/context/AuthContext";
 import { consumeAuthRedirect } from "@/services/authRedirect";
-
+import { nigeriaStates } from "@/constants/nigeriaStates";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -23,6 +23,8 @@ const Register = () => {
     username: "",
     dob: "",
     phone: "",
+    state: "",
+    referralCode: "",
   });
 
   const updateField = (key: string, value: string) => {
@@ -43,6 +45,8 @@ const Register = () => {
       username,
       dob,
       phone,
+      state,
+      referralCode,
     } = form;
 
     // validation
@@ -67,6 +71,8 @@ const Register = () => {
         password,
         dob,
         phone,
+        state,
+        referralCode,
         avatar,
       });
 
@@ -108,20 +114,22 @@ const Register = () => {
           />
 
           {/* Password */}
-          <InputField
-            placeholder="Password"
-            type="password"
-            value={form.password}
-            onChange={(v) => updateField("password", v)}
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <InputField
+              placeholder="Password"
+              type="password"
+              value={form.password}
+              onChange={(v) => updateField("password", v)}
+            />
 
-          {/* Verify Password */}
-          <InputField
-            placeholder="Verify Password"
-            type="password"
-            value={form.verifyPassword}
-            onChange={(v) => updateField("verifyPassword", v)}
-          />
+            {/* Verify Password */}
+            <InputField
+              placeholder="Verify Password"
+              type="password"
+              value={form.verifyPassword}
+              onChange={(v) => updateField("verifyPassword", v)}
+            />
+          </div>
 
           {/* Username + DOB */}
           <div className="grid grid-cols-2 gap-3">
@@ -136,10 +144,10 @@ const Register = () => {
               value={form.dob}
               onChange={(v) => updateField("dob", v)}
             />
-           
           </div>
 
           {/* Phone + Verified */}
+
           <div className="relative">
             <InputField
               placeholder="Phone Number"
@@ -149,14 +157,37 @@ const Register = () => {
             />
 
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <span className="text-[10px] text-black font-medium">
-                Verified
-              </span>
+              <span className="text-[10px] text-black font-medium">Verified</span>
 
               <CheckCircle2 className="h-5 w-5 fill-lime-400 text-whit drop-shadow-sm" />
             </div>
           </div>
 
+          <InputField
+            placeholder="Referral Code (optional)"
+            value={form.referralCode}
+            onChange={(v) => updateField("referralCode", v)}
+          />
+
+          <select
+            value={form.state}
+            onChange={(e) => updateField("state", e.target.value)}
+            className="h-12 w-full rounded-full bg-white px-5 text-sm text-black outline-none"
+          >
+            <option value="" className="text-gray-400">
+              Select State
+            </option>
+
+            {nigeriaStates.map((state) => (
+              <option key={state} value={state}>
+                {state}
+              </option>
+            ))}
+          </select>
+
+          <label className="block text-sm font-medium text-gray-400 pl-4 mb-2">
+            Add Profile Picture
+          </label>
           <input
             type="file"
             accept="image/*"
@@ -165,9 +196,7 @@ const Register = () => {
           />
 
           {/* Error (ONLY ADDITION TO UI) */}
-          {error && (
-            <p className="text-sm text-red-400 font-medium">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-400 font-medium">{error}</p>}
 
           {/* Register Button */}
           <button
@@ -191,12 +220,7 @@ type InputProps = {
   full?: boolean;
 };
 
-function InputField({
-  placeholder,
-  value,
-  onChange,
-  type = "text",
-}: InputProps) {
+function InputField({ placeholder, value, onChange, type = "text" }: InputProps) {
   return (
     <input
       type={type}
