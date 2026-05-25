@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -6,86 +6,94 @@ import { apiClient } from "@/services/api";
 import { useWallet } from "@/context/WalletContext";
 
 function CreateChallengePage() {
- const navigate = useNavigate();
- const { setLocalCoins } = useWallet();
- const [directChallenge, setDirectChallenge] = useState(false);
- const [gameType, setGameType] = useState("");
- const [amount, setAmount] = useState("");
- const [duration, setDuration] = useState("");
- const [opponentUsername, setOpponentUsername] = useState("");
- const [creating, setCreating] = useState(false);
- const [error, setError] = useState<string | null>(null);
- const [createdGame, setCreatedGame] = useState<{
-   gameId: string;
-   inviteLink: string;
- } | null>(null);
+  const navigate = useNavigate();
+  const { setLocalCoins } = useWallet();
+  const [directChallenge, setDirectChallenge] = useState(false);
+  const [gameType, setGameType] = useState("");
+  const [amount, setAmount] = useState("");
+  const [duration, setDuration] = useState("");
+  const [opponentUsername, setOpponentUsername] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [createdGame, setCreatedGame] = useState<{
+    gameId: string;
+    inviteLink: string;
+  } | null>(null);
 
- const fullInviteLink =
-   createdGame && typeof window !== "undefined"
-     ? `${window.location.origin}${createdGame.inviteLink}`
-     : createdGame?.inviteLink || "";
+  const fullInviteLink =
+    createdGame && typeof window !== "undefined"
+      ? `${window.location.origin}${createdGame.inviteLink}`
+      : createdGame?.inviteLink || "";
 
- const handleCreateGame = async () => {
-   if (creating) return;
+  const handleCreateGame = async () => {
+    if (creating) return;
 
-   setError(null);
+    setError(null);
 
-   if (!["Chess", "Ludo"].includes(gameType) || !amount || !duration || duration === "Set Play Duration") {
-     setError("Choose Chess or Ludo, amount, and duration.");
-     return;
-   }
+    if (
+      !["Chess", "Ludo"].includes(gameType) ||
+      !amount ||
+      !duration ||
+      duration === "Set Play Duration"
+    ) {
+      setError("Choose Chess or Ludo, amount, and duration.");
+      return;
+    }
 
-   if (directChallenge && !opponentUsername.trim()) {
-     setError("Enter an opponent username.");
-     return;
-   }
+    if (directChallenge && !opponentUsername.trim()) {
+      setError("Enter an opponent username.");
+      return;
+    }
 
-   try {
-     setCreating(true);
-     const result =
-       gameType === "Ludo"
-         ? await apiClient.createLudoRoom({
-             betAmount: Number(amount),
-             maxPlayers: 2,
-             turnSeconds: 25,
-           })
-         : await apiClient.createGame({
-             gameType,
-             amount,
-             duration,
-             directChallenge,
-             opponentUsername: opponentUsername.trim(),
-           });
+    try {
+      setCreating(true);
+      const result =
+        gameType === "Ludo"
+          ? await apiClient.createLudoRoom({
+              betAmount: Number(amount),
+              maxPlayers: 2,
+              turnSeconds: 25,
+            })
+          : await apiClient.createGame({
+              gameType,
+              amount,
+              duration,
+              directChallenge,
+              opponentUsername: opponentUsername.trim(),
+            });
 
-     if (typeof result.coins === "number") {
-       setLocalCoins(result.coins);
-     }
-     setCreatedGame(result);
-   } catch (err) {
-     setError(err instanceof Error ? err.message : "Could not create game.");
-   } finally {
-     setCreating(false);
-   }
- };
+      if (typeof result.coins === "number") {
+        setLocalCoins(result.coins);
+      }
+      setCreatedGame(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create game.");
+    } finally {
+      setCreating(false);
+    }
+  };
 
- const copyInviteLink = async () => {
-   if (!fullInviteLink) return;
-   await navigator.clipboard.writeText(fullInviteLink);
- };
+  const copyInviteLink = async () => {
+    if (!fullInviteLink) return;
+    await navigator.clipboard.writeText(fullInviteLink);
+  };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-4">
+    <main className="min-h-screen overflow-x-hidden bg-background px-4 py-5 text-foreground">
+      <div className="mx-auto w-full max-w-md space-y-4">
         {/* Header Button */}
-      <div className='flex justify-between items-center'>
-          <button className="bg-tab-active px-6 py-3 text-foreground border border-primary/60">
-          Create Challenge
-        </button>
+        <div className="flex flex-wrap justify-between gap-3 items-center">
+          <button className="bg-tab-active px-5 py-3 text-foreground border border-primary/60">
+            Create Challenge
+          </button>
 
-         <button onClick={() => navigate({ to: "/dashboard" })} className="bg-tab-active px-6 py-3 text-foreground border border-primary/60">
-         Dashboard
-        </button>
-      </div>
+          <button
+            onClick={() => navigate({ to: "/dashboard" })}
+            className="bg-tab-active px-5 py-3 text-foreground border border-primary/60"
+          >
+            Dashboard
+          </button>
+        </div>
 
         {/* Choose Game */}
         <div className="relative">
@@ -98,7 +106,7 @@ function CreateChallengePage() {
             <option>Scramble</option>
             <option>Picture Puzzle</option>
             <option>Ludo</option>
-             <option>Chess</option>
+            <option>Chess</option>
           </select>
           <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#244a7c]" />
         </div>
@@ -106,6 +114,7 @@ function CreateChallengePage() {
         {/* Amount */}
         <input
           type="number"
+          max={5000}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="Coin Amount"
@@ -134,7 +143,7 @@ function CreateChallengePage() {
               type="checkbox"
               checked={directChallenge}
               onChange={() => setDirectChallenge(!directChallenge)}
-             className="h-5 w-5 appearance-none rounded-full border-2 border-[#9FC8F6] bg-accent-foreground checked:bg-[#9FC8F6] checked:border-[#9FC8F6] transition"
+              className="h-5 w-5 appearance-none rounded-full border-2 border-[#9FC8F6] bg-accent-foreground checked:bg-[#9FC8F6] checked:border-[#9FC8F6] transition"
             />
             <span className="pl-2">Direct Challenge?</span>
           </div>
@@ -208,7 +217,7 @@ function CreateChallengePage() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }
-export default CreateChallengePage
+export default CreateChallengePage;

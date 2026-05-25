@@ -86,7 +86,7 @@ export const LudoBoard = memo(
           ...item,
           x: item.x + ((index % 2) - 0.5) * Math.min(14, items.length * 5),
           y: item.y + (Math.floor(index / 2) - 0.5) * Math.min(14, items.length * 5),
-        }))
+        })),
       );
     }, [board]);
 
@@ -130,9 +130,7 @@ export const LudoBoard = memo(
                   row * tile + 30
                 } L ${col * tile + 11} ${row * tile + 35} L ${col * tile + 14} ${
                   row * tile + 25
-                } L ${col * tile + 6} ${row * tile + 18} L ${col * tile + 16} ${
-                  row * tile + 17
-                } Z`}
+                } L ${col * tile + 6} ${row * tile + 18} L ${col * tile + 16} ${row * tile + 17} Z`}
                 fill={entryColor ? paint[entryColor].main : "#94a3b8"}
                 opacity="0.65"
               />
@@ -144,7 +142,15 @@ export const LudoBoard = memo(
     const renderHome = (color: LudoColor, x: number, y: number) => (
       <g key={`home-${color}`}>
         <rect x={x} y={y} width="240" height="240" rx="28" fill={paint[color].main} />
-        <rect x={x + 34} y={y + 34} width="172" height="172" rx="24" fill="#ffffff" opacity="0.96" />
+        <rect
+          x={x + 34}
+          y={y + 34}
+          width="172"
+          height="172"
+          rx="24"
+          fill="#ffffff"
+          opacity="0.96"
+        />
         {homeCoords[color].map(([row, col], index) => {
           const point = center(row, col);
           return (
@@ -163,16 +169,22 @@ export const LudoBoard = memo(
     );
 
     return (
-      <div className="mx-auto aspect-square w-full max-w-[560px] rounded border-8 border-[#252525] bg-[#f8fafc] p-1 shadow-[0_24px_60px_rgba(0,0,0,0.45)]">
+      <div className="mx-auto aspect-square w-full max-w-full rounded border-4 border-[#252525] bg-[#f8fafc] p-1 shadow-[0_24px_60px_rgba(0,0,0,0.45)] sm:max-w-[560px] sm:border-8">
         <svg
           viewBox="0 0 600 600"
-          className="h-full w-full overflow-visible rounded-sm"
+          className="h-full w-full overflow-hidden rounded-sm"
           role="img"
           aria-label="Real-time Ludo board"
         >
           <defs>
             <filter id="tokenShadow" x="-40%" y="-40%" width="180%" height="180%">
-              <feDropShadow dx="0" dy="8" stdDeviation="5" floodColor="#020617" floodOpacity="0.35" />
+              <feDropShadow
+                dx="0"
+                dy="8"
+                stdDeviation="5"
+                floodColor="#020617"
+                floodOpacity="0.35"
+              />
             </filter>
             <radialGradient id="tokenGloss" cx="32%" cy="25%" r="70%">
               <stop offset="0%" stopColor="#ffffff" stopOpacity="0.75" />
@@ -203,7 +215,7 @@ export const LudoBoard = memo(
                 strokeWidth="1.5"
                 opacity={index === 5 ? 0.95 : 0.8}
               />
-            ))
+            )),
           )}
 
           <polygon points="240,240 300,300 240,360" fill={paint.yellow.main} />
@@ -220,7 +232,7 @@ export const LudoBoard = memo(
               legalTokenIds.includes(token.tokenId);
             const isActive = token.color === currentTurn;
             const isCaptured = moveEffect?.killed?.some(
-              (item) => item.color === token.color && item.tokenId === token.tokenId
+              (item) => item.color === token.color && item.tokenId === token.tokenId,
             );
             const isMoving =
               moveEffect?.color === token.color && moveEffect.tokenId === token.tokenId;
@@ -239,7 +251,14 @@ export const LudoBoard = memo(
                   transform: `translate(${token.x}px, ${token.y}px)`,
                 }}
               >
-                {isActive && <circle r="24" fill={paint[token.color].main} opacity="0.24" className="ludo-turn-ring" />}
+                {isActive && (
+                  <circle
+                    r="24"
+                    fill={paint[token.color].main}
+                    opacity="0.24"
+                    className="ludo-turn-ring"
+                  />
+                )}
                 <circle r="17" fill={paint[token.color].deep} filter="url(#tokenShadow)" />
                 <circle r="15" fill={paint[token.color].main} />
                 <circle r="15" fill="url(#tokenGloss)" />
@@ -259,7 +278,7 @@ export const LudoBoard = memo(
         </svg>
       </div>
     );
-  }
+  },
 );
 
 LudoBoard.displayName = "LudoBoard";

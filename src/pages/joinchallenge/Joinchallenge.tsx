@@ -1,16 +1,22 @@
-import React from 'react'
+import React from "react";
 import puzzleImg from "@/assets/puzzleImg.jpg";
 
 const Joinchallenge = () => {
- const tiles = [
-    { show: true },  { show: false }, { show: true },
-    { show: false }, { show: false }, { show: false },
-    { show: true },  { show: false }, { show: true },
+  const tiles = [
+    { show: true },
+    { show: false },
+    { show: true },
+    { show: false },
+    { show: false },
+    { show: false },
+    { show: true },
+    { show: false },
+    { show: true },
   ];
 
   return (
-    <main className="min-h-screen bg-background flex items-start justify-center px-6 py-12">
-      <section className="w-full max-w-sm flex flex-col items-center">
+    <main className="min-h-screen overflow-x-hidden bg-background px-4 py-5">
+      <section className="mx-auto flex w-full max-w-md flex-col items-center">
         <h1 className="text-foreground w-full font-semibold text-base leading-snug">
           You are about to Join a Picture Puzzle
           <br />
@@ -53,9 +59,7 @@ const Joinchallenge = () => {
           If you win the Challenge you will get 900 coins credited into your account
         </p>
 
-        <button
-          className="mt-6 w-full bg-primary text-primary-foreground font-semibold text-base py-4 rounded-full hover:opacity-90 transition-opacity"
-        >
+        <button className="mt-6 w-full bg-primary text-primary-foreground font-semibold text-base py-4 rounded-full hover:opacity-90 transition-opacity">
           Accept Challenge
         </button>
       </section>
@@ -63,6 +67,4 @@ const Joinchallenge = () => {
   );
 };
 
-
-
-export default Joinchallenge
+export default Joinchallenge;

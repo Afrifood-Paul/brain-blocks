@@ -3,8 +3,8 @@ const Transaction = require("../models/Transaction");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const SIGNUP_BONUS_COINS = 1000;
-const REFERRAL_BONUS_COINS = 50;
+const SIGNUP_BONUS_COINS = 5000;
+const REFERRAL_BONUS_COINS = 100;
 
 const buildReferralPrefix = (firstName, username) => {
   const source = String(username || firstName || "BRAIN")
@@ -104,9 +104,12 @@ exports.register = async (req, res) => {
       avatar,
       referralCode: newReferralCode,
       referredBy: referrer?._id || null,
-      referralRewarded: Boolean(referrer),
+      referralRewarded: false,
       wallet: {
-        coins: SIGNUP_BONUS_COINS,
+        inactiveCoins: SIGNUP_BONUS_COINS,
+        activeCoins: 0,
+        coins: 0,
+        balance: 0,
       },
     });
 
@@ -115,24 +118,32 @@ exports.register = async (req, res) => {
       type: "welcome_bonus",
       amount: SIGNUP_BONUS_COINS,
       coins: SIGNUP_BONUS_COINS,
+      walletType: "inactive",
       status: "success",
       reference: `welcome_bonus_${user._id}`,
       description: "Welcome bonus",
     });
 
     if (referrer && String(referrer._id) !== String(user._id)) {
-      const creditedReferrer = await User.findOneAndUpdate(
-        { _id: referrer._id },
-        { $inc: { "wallet.coins": REFERRAL_BONUS_COINS } },
+      const creditedNewUser = await User.findOneAndUpdate(
+        { _id: user._id, referralRewarded: false },
+        { $set: { referralRewarded: true } },
         { new: true },
       );
 
-      if (creditedReferrer) {
+      if (creditedNewUser) {
+        const creditedReferrer = await User.findByIdAndUpdate(
+          referrer._id,
+          { $inc: { "wallet.inactiveCoins": REFERRAL_BONUS_COINS } },
+          { new: true },
+        );
+
         await Transaction.create({
           userId: creditedReferrer._id,
           type: "referral_bonus",
           amount: REFERRAL_BONUS_COINS,
           coins: REFERRAL_BONUS_COINS,
+          walletType: "inactive",
           status: "success",
           reference: `referral_bonus_${creditedReferrer._id}_${user._id}`,
           description: "Referral signup bonus",

@@ -1,7 +1,3 @@
-
-
-
-
 // const mongoose = require("mongoose");
 
 // const userSchema = new mongoose.Schema(
@@ -18,8 +14,6 @@
 // );
 
 // module.exports = mongoose.model("User", userSchema);
-
-
 
 const mongoose = require("mongoose");
 
@@ -62,6 +56,8 @@ const userSchema = new mongoose.Schema(
     },
 
     wallet: {
+      inactiveCoins: { type: Number, default: 5000, min: 0 },
+      activeCoins: { type: Number, default: 0, min: 0 },
       coins: { type: Number, default: 0 },
       balance: { type: Number },
     },
@@ -86,7 +82,7 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("User", userSchema);

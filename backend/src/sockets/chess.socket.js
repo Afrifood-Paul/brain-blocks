@@ -1,7 +1,13 @@
 const jwt = require("jsonwebtoken");
 const { Chess } = require("chess.js");
 const Game = require("../models/Game");
+const Transaction = require("../models/Transaction");
 const User = require("../models/User");
+const {
+  activeCoinsExpression,
+  getWalletSnapshot,
+  inactiveCoinsExpression,
+} = require("../utils/wallet");
 
 const STARTING_FEN = new Chess().fen();
 const DEFAULT_TIME_SECONDS = 600;
@@ -24,8 +30,7 @@ const getSocketUserId = (socket) => {
 
 const getPlayerKey = (socket) => socket.data.userId || socket.id;
 
-const sameId = (left, right) =>
-  Boolean(left && right && String(left) === String(right));
+const sameId = (left, right) => Boolean(left && right && String(left) === String(right));
 
 const playerMatchesSocket = (player, socket) => {
   if (!player) return false;
@@ -41,8 +46,7 @@ const hasTimerStarted = (game) => Boolean(game.timerStartedAt);
 const restoreMissingTimerStart = (game) => {
   if (game.timerStartedAt || !game.moveHistory.length) return;
 
-  game.timerStartedAt =
-    game.moveHistory[0]?.movedAt || game.lastTimerStartedAt || new Date();
+  game.timerStartedAt = game.moveHistory[0]?.movedAt || game.lastTimerStartedAt || new Date();
 
   if (!game.lastTimerStartedAt) {
     game.lastTimerStartedAt = game.timerStartedAt;
@@ -60,10 +64,7 @@ const applyTimer = (game, now = new Date()) => {
     return;
   }
 
-  const elapsed = Math.max(
-    0,
-    Math.floor((now.getTime() - game.timerStartedAt.getTime()) / 1000)
-  );
+  const elapsed = Math.max(0, Math.floor((now.getTime() - game.timerStartedAt.getTime()) / 1000));
 
   const duration = game.duration || DEFAULT_TIME_SECONDS;
   const sharedTime = Math.max(0, duration - elapsed);
@@ -80,6 +81,85 @@ const applyTimer = (game, now = new Date()) => {
 const getWinnerColor = (game) => {
   if (game.status !== "checkmate") return null;
   return game.currentTurn === "w" ? "b" : "w";
+};
+
+const createTransaction = (data) =>
+  Transaction.create(data).catch((error) => {
+    if (error.code === 11000) return null;
+    throw error;
+  });
+
+const settleGame = async (game) => {
+  if (game.settledAt || game.status !== "checkmate") return;
+
+  const winnerColor = getWinnerColor(game);
+  const winner = winnerColor === "w" ? game.players.white : game.players.black;
+  const betAmount = Number(game.amount || 0);
+  if (!winner?.userId || !betAmount) return;
+
+  const claimedGame = await Game.findOneAndUpdate(
+    { _id: game._id, settledAt: null, status: "checkmate" },
+    {
+      $set: {
+        winnerUserId: String(winner.userId),
+        settledAt: new Date(),
+        result: {
+          winnerColor,
+          winnerUserId: String(winner.userId),
+          payout: betAmount * 2,
+          betAmount,
+        },
+      },
+    },
+    { new: true },
+  );
+
+  if (!claimedGame) return;
+
+  const payout = betAmount * 2;
+  const creditedWinner = await User.findOneAndUpdate(
+    {
+      _id: winner.userId,
+      $expr: { $gte: [inactiveCoinsExpression, betAmount] },
+    },
+    [
+      {
+        $set: {
+          "wallet.inactiveCoins": { $subtract: [inactiveCoinsExpression, betAmount] },
+          "wallet.activeCoins": { $add: [activeCoinsExpression, payout] },
+          "wallet.coins": { $add: [activeCoinsExpression, payout] },
+          "wallet.balance": { $add: [activeCoinsExpression, payout] },
+        },
+      },
+    ],
+    { new: true },
+  ).select("wallet");
+
+  if (!creditedWinner) return;
+
+  await createTransaction({
+    userId: winner.userId,
+    type: "bet_conversion",
+    amount: betAmount,
+    coins: betAmount,
+    walletType: "inactive",
+    status: "success",
+    reference: `chess_conversion_${game.gameId}_${winner.userId}`,
+    description: "Chess bet converted from inactive coins",
+    metadata: { gameId: game.gameId },
+  });
+
+  await createTransaction({
+    userId: winner.userId,
+    type: "game_winnings",
+    amount: payout,
+    coins: payout,
+    walletType: "active",
+    status: "success",
+    reference: `chess_prize_${game.gameId}_${winner.userId}`,
+    description: "Chess match prize",
+    metadata: { gameId: game.gameId, wallet: getWalletSnapshot(creditedWinner) },
+  });
 };
 
 const serializeGame = (game) => ({
@@ -120,9 +200,7 @@ const resolveStatus = (chess) => {
 const getUserProfile = async (userId) => {
   if (!userId) return {};
 
-  const user = await User.findById(userId).select(
-    "firstName lastName username avatar"
-  );
+  const user = await User.findById(userId).select("firstName lastName username avatar");
   if (!user) return {};
 
   return {
@@ -164,11 +242,7 @@ const assignPlayer = async (game, socket) => {
     return "w";
   }
 
-  if (
-    game.directChallenge &&
-    game.opponentUserId &&
-    !sameId(game.opponentUserId, player.userId)
-  ) {
+  if (game.directChallenge && game.opponentUserId && !sameId(game.opponentUserId, player.userId)) {
     return null;
   }
 
@@ -208,7 +282,6 @@ const assignPlayer = async (game, socket) => {
 
 //   return null;
 // };
-
 
 const getPersistedSocketColor = (game, socket) => {
   if (playerMatchesSocket(game.players.white, socket)) return "w";
@@ -312,6 +385,7 @@ const startGameTimer = (io, gameId) => {
       emitGameToRoom(io, gameId, "game_state", game);
 
       if (game.status !== "active") {
+        await settleGame(game);
         emitGameToRoom(io, gameId, "game_over", game);
         clearInterval(interval);
         timersByGame.delete(gameId);
@@ -336,8 +410,7 @@ module.exports = (io) => {
     }
 
     socket.on("join_game", async (payload) => {
-      const gameId =
-        typeof payload === "string" ? payload : payload?.gameId;
+      const gameId = typeof payload === "string" ? payload : payload?.gameId;
 
       if (!socket.data.userId) {
         socket.emit("game_state", { error: "Authentication required" });
@@ -397,6 +470,7 @@ module.exports = (io) => {
 
           applyTimer(game);
           if (game.status !== "active") {
+            await settleGame(game);
             await game.save();
             emitGameToRoom(io, gameId, "game_state", game);
             emitGameToRoom(io, gameId, "game_over", game);
@@ -447,11 +521,11 @@ module.exports = (io) => {
           await game.save();
 
           const movePayload = {
-              from: result.from,
-              to: result.to,
-              promotion: result.promotion || null,
-              san: result.san,
-              color: result.color,
+            from: result.from,
+            to: result.to,
+            promotion: result.promotion || null,
+            san: result.san,
+            color: result.color,
           };
 
           emitGameToRoom(io, gameId, "move_made", game, {
@@ -459,6 +533,7 @@ module.exports = (io) => {
           });
 
           if (game.status !== "active") {
+            await settleGame(game);
             emitGameToRoom(io, gameId, "game_over", game, {
               move: movePayload,
             });
@@ -470,10 +545,7 @@ module.exports = (io) => {
     });
 
     socket.on("disconnect", () => {
-      if (
-        socket.data.userId &&
-        activeSocketsByUser.get(socket.data.userId) === socket.id
-      ) {
+      if (socket.data.userId && activeSocketsByUser.get(socket.data.userId) === socket.id) {
         activeSocketsByUser.delete(socket.data.userId);
       }
     });

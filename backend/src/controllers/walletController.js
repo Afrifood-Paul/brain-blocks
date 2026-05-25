@@ -5,10 +5,8 @@ const {
   initializePaystackPayment,
   verifyPaystackPayment,
 } = require("../services/payment/paystackService");
-const {
-  initializeOpayPayment,
-  verifyOpayPayment,
-} = require("../services/payment/opayService");
+const { initializeOpayPayment, verifyOpayPayment } = require("../services/payment/opayService");
+const { activeCoinsExpression, getWalletSnapshot } = require("../utils/wallet");
 
 const providers = {
   paystack: {
@@ -49,15 +47,8 @@ const normalizeAmount = (amount) => {
   return Number.isFinite(value) ? Math.round(value * 100) / 100 : 0;
 };
 
-const getWalletCoins = (user) => user.wallet?.coins ?? user.wallet?.balance ?? 0;
-
 exports.getBalance = async (req, res) => {
-  const coins = getWalletCoins(req.user);
-
-  res.json({
-    coins,
-    balance: coins,
-  });
+  res.json(getWalletSnapshot(req.user));
 };
 
 exports.getTransactions = async (req, res) => {
@@ -70,6 +61,7 @@ exports.getTransactions = async (req, res) => {
     transactions: transactions.map((transaction) => ({
       ...transaction,
       coins: transaction.coins ?? transaction.amount ?? 0,
+      walletType: transaction.walletType || undefined,
     })),
   });
 };
@@ -121,8 +113,7 @@ exports.initializeFunding = async (req, res) => {
   }
 
   const reference = `wallet_${provider}_${crypto.randomUUID()}`;
-  const callbackUrl =
-    req.body.callbackUrl || `${process.env.FRONTEND_URL || ""}/fundwallet`;
+  const callbackUrl = req.body.callbackUrl || `${process.env.FRONTEND_URL || ""}/fundwallet`;
   let transaction = null;
 
   try {
@@ -131,6 +122,7 @@ exports.initializeFunding = async (req, res) => {
       type: "funding",
       amount,
       coins: amount,
+      walletType: "active",
       reference,
       provider,
       status: "pending",
@@ -200,11 +192,9 @@ exports.verifyFunding = async (req, res) => {
 
     if (transaction.status === "success") {
       const user = await User.findById(req.user._id).select("wallet");
-      const coins = getWalletCoins(user);
       return res.json({
         msg: "Wallet already credited",
-        coins,
-        balance: coins,
+        ...getWalletSnapshot(user),
         transaction,
       });
     }
@@ -238,16 +228,14 @@ exports.verifyFunding = async (req, res) => {
           },
         },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!creditedTransaction) {
       const user = await User.findById(req.user._id).select("wallet");
-      const coins = getWalletCoins(user);
       return res.json({
         msg: "Wallet already processed",
-        coins,
-        balance: coins,
+        ...getWalletSnapshot(user),
         transaction,
       });
     }
@@ -257,29 +245,151 @@ exports.verifyFunding = async (req, res) => {
       [
         {
           $set: {
-            "wallet.coins": {
-              $add: [
-                { $ifNull: ["$wallet.coins", { $ifNull: ["$wallet.balance", 0] }] },
-                creditedTransaction.amount,
-              ],
-            },
+            "wallet.activeCoins": { $add: [activeCoinsExpression, creditedTransaction.amount] },
+            "wallet.coins": { $add: [activeCoinsExpression, creditedTransaction.amount] },
+            "wallet.balance": { $add: [activeCoinsExpression, creditedTransaction.amount] },
           },
         },
       ],
-      { new: true }
+      { new: true },
     ).select("wallet");
-
-    const coins = getWalletCoins(user);
 
     res.json({
       msg: "Wallet funded successfully",
-      coins,
-      balance: coins,
+      ...getWalletSnapshot(user),
       transaction: creditedTransaction,
     });
   } catch (err) {
     res.status(500).json({
       msg: err.message || "Unable to verify payment",
     });
+  }
+};
+
+exports.transferCoins = async (req, res) => {
+  const amount = normalizeAmount(req.body.amount);
+  const recipient = String(req.body.recipient || req.body.receiver || "")
+    .trim()
+    .replace(/^@/, "");
+
+  if (!recipient) {
+    return res.status(400).json({ msg: "Recipient is required" });
+  }
+
+  if (amount <= 0) {
+    return res.status(400).json({ msg: "Enter a valid transfer amount" });
+  }
+
+  const session = await User.startSession();
+
+  try {
+    let senderWallet = null;
+
+    await session.withTransaction(async () => {
+      const receiver = await User.findOne({
+        $or: [
+          { username: recipient },
+          { email: recipient.toLowerCase() },
+          { referralCode: recipient.toUpperCase() },
+        ],
+      })
+        .select("_id username email wallet")
+        .session(session);
+
+      if (!receiver) {
+        const error = new Error("Recipient not found");
+        error.status = 404;
+        throw error;
+      }
+
+      if (String(receiver._id) === String(req.user._id)) {
+        const error = new Error("You cannot transfer coins to yourself");
+        error.status = 400;
+        throw error;
+      }
+
+      const sender = await User.findOneAndUpdate(
+        {
+          _id: req.user._id,
+          $expr: { $gte: [activeCoinsExpression, amount] },
+        },
+        [
+          {
+            $set: {
+              "wallet.activeCoins": { $subtract: [activeCoinsExpression, amount] },
+              "wallet.coins": { $subtract: [activeCoinsExpression, amount] },
+              "wallet.balance": { $subtract: [activeCoinsExpression, amount] },
+            },
+          },
+        ],
+        { new: true, session },
+      ).select("wallet username");
+
+      if (!sender) {
+        const error = new Error("Insufficient active coins");
+        error.status = 400;
+        throw error;
+      }
+
+      const creditedReceiver = await User.findByIdAndUpdate(
+        receiver._id,
+        [
+          {
+            $set: {
+              "wallet.activeCoins": { $add: [activeCoinsExpression, amount] },
+              "wallet.coins": { $add: [activeCoinsExpression, amount] },
+              "wallet.balance": { $add: [activeCoinsExpression, amount] },
+            },
+          },
+        ],
+        { new: true, session },
+      ).select("wallet username");
+
+      const reference = `coin_transfer_${crypto.randomUUID()}`;
+      await Transaction.create(
+        [
+          {
+            userId: req.user._id,
+            type: "coin_transfer_sent",
+            amount,
+            coins: amount,
+            walletType: "active",
+            status: "success",
+            reference: `${reference}_sender`,
+            description: `Coin transfer to @${creditedReceiver.username}`,
+            sender: req.user._id,
+            receiver: creditedReceiver._id,
+            metadata: { recipient: creditedReceiver.username },
+          },
+          {
+            userId: creditedReceiver._id,
+            type: "coin_transfer_received",
+            amount,
+            coins: amount,
+            walletType: "active",
+            status: "success",
+            reference: `${reference}_receiver`,
+            description: `Coin transfer from @${sender.username}`,
+            sender: req.user._id,
+            receiver: creditedReceiver._id,
+            metadata: { sender: sender.username },
+          },
+        ],
+        { session },
+      );
+
+      senderWallet = sender;
+    });
+
+    res.status(201).json({
+      msg: "Coins transferred successfully",
+      ...getWalletSnapshot(senderWallet),
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({
+      msg: err.message || "Unable to transfer coins",
+    });
+  } finally {
+    session.endSession();
   }
 };

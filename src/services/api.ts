@@ -138,11 +138,7 @@ class ApiClient {
     return this.request(`/ludo/rooms/${roomId}`);
   }
 
-  async createLudoRoom(data: {
-    betAmount: number;
-    maxPlayers: number;
-    turnSeconds: number;
-  }) {
+  async createLudoRoom(data: { betAmount: number; maxPlayers: number; turnSeconds: number }) {
     return this.request("/ludo/rooms", {
       method: "POST",
       body: JSON.stringify(data),
@@ -178,6 +174,13 @@ class ApiClient {
 
   async verifyWalletFunding(data: { provider: "paystack" | "opay"; reference: string }) {
     return this.request("/wallet/verify", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async transferCoins(data: { recipient: string; amount: number }) {
+    return this.request("/wallet/transfer", {
       method: "POST",
       body: JSON.stringify(data),
     });

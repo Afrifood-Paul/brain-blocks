@@ -2,45 +2,13 @@ const crypto = require("crypto");
 const LudoRoom = require("../models/LudoRoom");
 const LudoMatch = require("../models/LudoMatch");
 const LudoMoveHistory = require("../models/LudoMoveHistory");
-const Transaction = require("../models/Transaction");
-const User = require("../models/User");
+const { MAX_BET_AMOUNT, getWalletSnapshot } = require("../utils/wallet");
 
 const DEFAULT_PLATFORM_FEE = Number(process.env.LUDO_PLATFORM_FEE_PERCENT || 5);
 const DEFAULT_TURN_SECONDS = Number(process.env.LUDO_TURN_SECONDS || 25);
 
-const getWalletCoins = (user) => user.wallet?.coins ?? user.wallet?.balance ?? 0;
-
 const getDisplayName = (user) =>
   `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username;
-
-const lockCoins = async (userId, amount) => {
-  const user = await User.findOneAndUpdate(
-    {
-      _id: userId,
-      $expr: {
-        $gte: [
-          { $ifNull: ["$wallet.coins", { $ifNull: ["$wallet.balance", 0] }] },
-          amount,
-        ],
-      },
-    },
-    [
-      {
-        $set: {
-          "wallet.coins": {
-            $subtract: [
-              { $ifNull: ["$wallet.coins", { $ifNull: ["$wallet.balance", 0] }] },
-              amount,
-            ],
-          },
-        },
-      },
-    ],
-    { new: true }
-  ).select("wallet");
-
-  return user;
-};
 
 exports.createLudoRoom = async (req, res) => {
   const betAmount = Number(req.body.betAmount);
@@ -51,13 +19,12 @@ exports.createLudoRoom = async (req, res) => {
     return res.status(400).json({ msg: "Enter a valid bet amount" });
   }
 
-  if (![2, 3, 4].includes(maxPlayers)) {
-    return res.status(400).json({ msg: "Ludo supports 2 to 4 players" });
+  if (betAmount > MAX_BET_AMOUNT) {
+    return res.status(400).json({ msg: `Bet amount cannot exceed ${MAX_BET_AMOUNT} coins` });
   }
 
-  const user = await lockCoins(req.user._id, betAmount);
-  if (!user) {
-    return res.status(400).json({ msg: "Insufficient coins" });
+  if (![2, 3, 4].includes(maxPlayers)) {
+    return res.status(400).json({ msg: "Ludo supports 2 to 4 players" });
   }
 
   const roomId = crypto.randomUUID();
@@ -86,29 +53,13 @@ exports.createLudoRoom = async (req, res) => {
       pot: betAmount,
     });
 
-    await Transaction.create({
-      userId: req.user._id,
-      type: "ludo_bet_locked",
-      amount: betAmount,
-      coins: betAmount,
-      status: "success",
-      reference: `ludo_lock_${roomId}_${req.user._id}`,
-      description: "Ludo bet locked",
-      metadata: { roomId },
-    });
-
     res.status(201).json({
       room,
       roomId,
       inviteLink: `/ludo?roomId=${roomId}`,
-      coins: getWalletCoins(user),
-      balance: getWalletCoins(user),
+      ...getWalletSnapshot(req.user),
     });
   } catch (err) {
-    await User.findByIdAndUpdate(req.user._id, {
-      $inc: { "wallet.coins": betAmount },
-    }).catch(() => {});
-
     res.status(500).json({ msg: "Unable to create Ludo room" });
   }
 };

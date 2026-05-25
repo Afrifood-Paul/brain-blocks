@@ -30,8 +30,29 @@ const transactionSchema = new mongoose.Schema(
         "ludo_bet_refund",
         "ludo_prize",
         "ludo_platform_fee",
+        "bet_conversion",
+        "game_winnings",
+        "coin_transfer_sent",
+        "coin_transfer_received",
       ],
       default: "funding",
+      index: true,
+    },
+    walletType: {
+      type: String,
+      enum: ["inactive", "active"],
+      index: true,
+    },
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
+    receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
       index: true,
     },
     status: {
@@ -77,7 +98,7 @@ const transactionSchema = new mongoose.Schema(
       default: {},
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Transaction", transactionSchema);

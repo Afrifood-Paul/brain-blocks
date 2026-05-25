@@ -1,8 +1,8 @@
 const crypto = require("crypto");
 const { Chess } = require("chess.js");
 const Game = require("../models/Game");
-const Transaction = require("../models/Transaction");
 const User = require("../models/User");
+const { MAX_BET_AMOUNT, getWalletSnapshot } = require("../utils/wallet");
 
 const parseDuration = (duration) => {
   if (typeof duration === "number") return duration * 60;
@@ -34,6 +34,10 @@ exports.createGame = async (req, res) => {
     return res.status(400).json({ msg: "Enter a valid coin amount" });
   }
 
+  if (coinAmount > MAX_BET_AMOUNT) {
+    return res.status(400).json({ msg: `Bet amount cannot exceed ${MAX_BET_AMOUNT} coins` });
+  }
+
   if (directChallenge && !opponentUsername?.trim()) {
     return res.status(400).json({ msg: "Opponent username is required" });
   }
@@ -55,34 +59,6 @@ exports.createGame = async (req, res) => {
 
   const gameId = crypto.randomUUID();
   const seconds = parseDuration(duration);
-  const user = await User.findOneAndUpdate(
-    {
-      _id: req.user._id,
-      $expr: {
-        $gte: [
-          { $ifNull: ["$wallet.coins", { $ifNull: ["$wallet.balance", 0] }] },
-          coinAmount,
-        ],
-      },
-    },
-    [
-      {
-        $set: {
-          "wallet.coins": {
-            $subtract: [
-              { $ifNull: ["$wallet.coins", { $ifNull: ["$wallet.balance", 0] }] },
-              coinAmount,
-            ],
-          },
-        },
-      },
-    ],
-    { new: true }
-  ).select("wallet");
-
-  if (!user) {
-    return res.status(400).json({ msg: "Insufficient coins" });
-  }
 
   try {
     await Game.create({
@@ -99,7 +75,8 @@ exports.createGame = async (req, res) => {
           userId: String(req.user._id),
           socketId: null,
           username: req.user.username,
-          name: `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() || req.user.username,
+          name:
+            `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() || req.user.username,
           avatar: req.user.avatar || "",
         },
         black: null,
@@ -113,34 +90,13 @@ exports.createGame = async (req, res) => {
       lastTimerStartedAt: null,
       status: "active",
     });
-
-    await Transaction.create({
-      userId: req.user._id,
-      type: "game_spend",
-      amount: coinAmount,
-      coins: coinAmount,
-      status: "success",
-      reference: `game_spend_${gameId}`,
-      description: `Game entry: ${gameType}`,
-      metadata: {
-        gameId,
-        directChallenge,
-      },
-    });
   } catch (err) {
-    await User.findByIdAndUpdate(req.user._id, {
-      $inc: { "wallet.coins": coinAmount },
-    }).catch(() => {});
-
     return res.status(500).json({ msg: "Unable to create game" });
   }
-
-  const coins = user.wallet?.coins ?? user.wallet?.balance ?? 0;
 
   res.status(201).json({
     gameId,
     inviteLink: `/chess?gameId=${gameId}`,
-    coins,
-    balance: coins,
+    ...getWalletSnapshot(req.user),
   });
 };

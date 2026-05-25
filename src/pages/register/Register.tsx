@@ -6,6 +6,9 @@ import { useAuth } from "@/context/AuthContext";
 import { consumeAuthRedirect } from "@/services/authRedirect";
 import { nigeriaStates } from "@/constants/nigeriaStates";
 
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -77,16 +80,16 @@ const Register = () => {
       });
 
       navigate({ to: consumeAuthRedirect() || "/dashboard", replace: true });
-    } catch (err: any) {
-      setError(err.message || "Registration failed");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Registration failed"));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="h-full bg-black text-white px-4 pt-12">
-      <div className="mx-auto w-full max-w-sm ">
+    <main className="min-h-screen overflow-x-hidden bg-background px-4 py-5 text-foreground">
+      <div className="mx-auto w-full max-w-md">
         {/* Top Tabs */}
         <AuthTabs active="register" />
 

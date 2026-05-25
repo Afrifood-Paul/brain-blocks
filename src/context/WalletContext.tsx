@@ -12,9 +12,18 @@ import { useAuth } from "@/context/AuthContext";
 
 type Provider = "paystack" | "opay";
 
+type WalletPayload = {
+  activeCoins?: number;
+  inactiveCoins?: number;
+  coins?: number;
+  balance?: number;
+};
+
 type WalletContextType = {
   coins: number;
   balance: number;
+  activeCoins: number;
+  inactiveCoins: number;
   loading: boolean;
   error: string | null;
   fetchBalance: () => Promise<number>;
@@ -32,13 +41,31 @@ export const formatCoins = (amount: number) =>
 
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const { isAuthenticated, user } = useAuth();
+  const wallet = user?.wallet;
+  const walletActiveCoins = wallet?.activeCoins;
+  const walletCoins = wallet?.coins;
+  const walletBalance = wallet?.balance;
   const [coins, setCoins] = useState(0);
+  const [inactiveCoins, setInactiveCoins] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const getErrorMessage = (err: unknown, fallback: string) =>
+    err instanceof Error ? err.message : fallback;
+
+  const applyWallet = useCallback((nextWallet: WalletPayload) => {
+    const nextActiveCoins = Number(
+      nextWallet.activeCoins ?? nextWallet.coins ?? nextWallet.balance ?? 0,
+    );
+    setCoins(nextActiveCoins);
+    setInactiveCoins(Number(nextWallet.inactiveCoins ?? 0));
+    return nextActiveCoins;
+  }, []);
 
   const fetchBalance = useCallback(async () => {
     if (!isAuthenticated) {
       setCoins(0);
+      setInactiveCoins(0);
       return 0;
     }
 
@@ -47,16 +74,14 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const res = await apiClient.getWalletBalance();
-      const nextCoins = Number(res.coins ?? res.balance ?? 0);
-      setCoins(nextCoins);
-      return nextCoins;
-    } catch (err: any) {
-      setError(err.message || "Unable to fetch coin balance");
+      return applyWallet(res);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Unable to fetch coin balance"));
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [applyWallet, isAuthenticated]);
 
   const fundWallet = useCallback(async (provider: Provider, amount: number) => {
     setLoading(true);
@@ -71,8 +96,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       });
 
       window.location.href = res.authorizationUrl;
-    } catch (err: any) {
-      setError(err.message || "Unable to initialize payment");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Unable to initialize payment"));
       throw err;
     } finally {
       setLoading(false);
@@ -83,38 +108,51 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     setCoins(Number(nextCoins || 0));
   }, []);
 
-  const verifyFunding = useCallback(async (provider: Provider, reference: string) => {
-    setLoading(true);
-    setError(null);
+  const verifyFunding = useCallback(
+    async (provider: Provider, reference: string) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const res = await apiClient.verifyWalletFunding({ provider, reference });
-      const nextCoins = Number(res.coins ?? res.balance ?? 0);
-      setCoins(nextCoins);
-    } catch (err: any) {
-      setError(err.message || "Unable to verify payment");
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      try {
+        const res = await apiClient.verifyWalletFunding({ provider, reference });
+        applyWallet(res);
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Unable to verify payment"));
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [applyWallet],
+  );
 
   useEffect(() => {
     if (isAuthenticated) {
-      const userCoins = user?.wallet?.coins ?? user?.wallet?.balance;
-      if (typeof userCoins === "number") {
-        setCoins(userCoins);
+      const userCoins = walletCoins ?? walletBalance;
+      if (typeof walletActiveCoins === "number" || typeof userCoins === "number") {
+        applyWallet(wallet || {});
       }
       fetchBalance().catch(() => {});
     } else {
       setCoins(0);
+      setInactiveCoins(0);
     }
-  }, [isAuthenticated, user?.wallet?.coins, user?.wallet?.balance, fetchBalance]);
+  }, [
+    applyWallet,
+    isAuthenticated,
+    wallet,
+    walletActiveCoins,
+    walletCoins,
+    walletBalance,
+    fetchBalance,
+  ]);
 
   const value = useMemo(
     () => ({
       coins,
       balance: coins,
+      activeCoins: coins,
+      inactiveCoins,
       loading,
       error,
       fetchBalance,
@@ -122,12 +160,10 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       fundWallet,
       verifyFunding,
     }),
-    [coins, loading, error, fetchBalance, setLocalCoins, fundWallet, verifyFunding]
+    [coins, inactiveCoins, loading, error, fetchBalance, setLocalCoins, fundWallet, verifyFunding],
   );
 
-  return (
-    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
-  );
+  return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 };
 
 export const useWallet = () => {

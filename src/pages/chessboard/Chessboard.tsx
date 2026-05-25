@@ -1,9 +1,21 @@
 import { useEffect } from "react";
+import type { Square } from "chess.js";
 import { Chessboard as Board } from "react-chessboard";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
 import defaultAvatar from "@/assets/chessIcon.png";
 import { API_ORIGIN } from "@/services/api";
+
+type ChessPlayer = {
+  name?: string;
+  username?: string;
+  avatar?: string | null;
+};
+
+type ChessMove = {
+  to: string;
+  promotion?: string;
+};
 
 const Chessboard = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -26,10 +38,10 @@ const Chessboard = () => {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  const getPlayer = (color: "w" | "b") =>
+  const getPlayer = (color: "w" | "b"): ChessPlayer | null | undefined =>
     color === "w" ? players?.white : players?.black;
 
-  const getDisplayName = (player: any, fallback: string) =>
+  const getDisplayName = (player: ChessPlayer | null | undefined, fallback: string) =>
     player?.name || player?.username || fallback;
 
   const getAvatarSrc = (avatar?: string | null) => {
@@ -39,30 +51,28 @@ const Chessboard = () => {
   };
 
   const renderPlayer = (
-    player: any,
+    player: ChessPlayer | null | undefined,
     fallbackName: string,
-    isActive: boolean
+    isActive: boolean,
   ) => (
-    <div className="w-full max-w-[560px] flex items-center justify-between rounded-md  px-4 py-3">
+    <div className="flex w-full max-w-md items-center justify-between gap-3 rounded-md px-0 py-3 sm:px-4">
       <div className="flex items-center gap-3">
-        <div className="h-14 w-14 rounded-full bg-[#9FC8F6] border border-4 border-[#008FF0] overflow-hidden">
+        <div className="h-12 w-12 shrink-0 rounded-full bg-[#9FC8F6] border-4 border-[#008FF0] overflow-hidden sm:h-14 sm:w-14">
           <img
             src={getAvatarSrc(player?.avatar)}
             alt={getDisplayName(player, fallbackName)}
             className="h-full w-full object-cover"
           />
         </div>
-        <div>
-          <div className="font-bold text-xl text-white leading-tight">
+        <div className="min-w-0">
+          <div className="truncate text-base font-bold leading-tight text-white sm:text-xl">
             {"@" + getDisplayName(player, fallbackName)}
           </div>
-          <div className="text-xs text-white/60">
-            {isActive ? "Thinking..." : "Waiting"}
-          </div>
+          <div className="text-xs text-white/60">{isActive ? "Thinking..." : "Waiting"}</div>
         </div>
       </div>
-      <div className="m-3 px-6 py-3 rounded border border-1 border-[#008FF0] bg-[#46597A] ">
-        <span className="text-foreground font-mono font-bold text-lg tabular-nums">
+      <div className="shrink-0 rounded border border-[#008FF0] bg-[#46597A] px-4 py-2 sm:px-6 sm:py-3">
+        <span className="font-mono text-base font-bold tabular-nums text-foreground sm:text-lg">
           {formatTime(sharedTime)}
         </span>
       </div>
@@ -93,17 +103,16 @@ const Chessboard = () => {
       return false;
     }
 
-    const piece = game.get(sourceSquare as any);
+    const piece = game.get(sourceSquare as Square);
     if (!piece || piece.color !== playerColor) {
       return false;
     }
 
     const isLegalMove = game
-      .moves({ square: sourceSquare as any, verbose: true })
+      .moves({ square: sourceSquare as Square, verbose: true })
       .some(
-        (move: any) =>
-          move.to === targetSquare &&
-          (!move.promotion || move.promotion === "q")
+        (move: ChessMove) =>
+          move.to === targetSquare && (!move.promotion || move.promotion === "q"),
       );
 
     if (!isLegalMove) {
@@ -116,18 +125,18 @@ const Chessboard = () => {
       promotion: "q",
     });
   };
-  const boardSize = Math.min(window.innerWidth, window.innerHeight) * 0.8;
+  const boardSize =
+    typeof window === "undefined"
+      ? 320
+      : Math.max(260, Math.min(window.innerWidth - 40, window.innerHeight * 0.62, 420));
 
   return (
-    <div className="bg-black min-h-screen flex flex-col items-center justify-center text-white">
-
+    <main className="flex min-h-screen flex-col items-center justify-center overflow-x-hidden bg-background px-4 py-5 text-white">
       {renderPlayer(
         opponentPlayer,
         opponentColor === "w" ? "White" : "Black",
-        turn === opponentColor
+        turn === opponentColor,
       )}
-
-     
 
       {/* <div className=" flex justify-center items-center">
   <Board
@@ -140,25 +149,20 @@ const Chessboard = () => {
   />
 </div> */}
 
-<div className="w-full flex justify-center">
-  <div className="border-10 border-[#333333] overflow-hidden">
-    <Board
-      position={game.fen()}
-      onPieceDrop={onDrop}
-      boardOrientation={playerColor === "b" ? "black" : "white"}
-      boardWidth={boardSize}
-      customLightSquareStyle={{ backgroundColor: "#F1E4D1" }}
-      customDarkSquareStyle={{ backgroundColor: "#318B4A" }}
-    />
-  </div>
-</div>
+      <div className="flex w-full justify-center">
+        <div className="max-w-full overflow-hidden border-4 border-[#333333] sm:border-8">
+          <Board
+            position={game.fen()}
+            onPieceDrop={onDrop}
+            boardOrientation={playerColor === "b" ? "black" : "white"}
+            boardWidth={boardSize}
+            customLightSquareStyle={{ backgroundColor: "#F1E4D1" }}
+            customDarkSquareStyle={{ backgroundColor: "#318B4A" }}
+          />
+        </div>
+      </div>
 
-     
-      {renderPlayer(
-        currentPlayer,
-        currentColor === "w" ? "White" : "Black",
-        turn === currentColor
-      )}
+      {renderPlayer(currentPlayer, currentColor === "w" ? "White" : "Black", turn === currentColor)}
 
       {(status === "draw" || status === "checkmate") && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
@@ -175,17 +179,14 @@ const Chessboard = () => {
                   />
                 </div>
                 <h2 className="text-2xl font-bold">
-                  {getDisplayName(
-                    winnerPlayer,
-                    winnerColor === "w" ? "White" : "Black"
-                  )} wins
+                  {getDisplayName(winnerPlayer, winnerColor === "w" ? "White" : "Black")} wins
                 </h2>
               </>
             )}
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 };
 

@@ -5,6 +5,7 @@ const {
   getReferralSummary,
   getTransactions,
   initializeFunding,
+  transferCoins,
   verifyFunding,
 } = require("../controllers/walletController");
 
@@ -13,5 +14,6 @@ router.get("/transactions", requireAuth, getTransactions);
 router.get("/referrals", requireAuth, getReferralSummary);
 router.post("/fund", requireAuth, initializeFunding);
 router.post("/verify", requireAuth, verifyFunding);
+router.post("/transfer", requireAuth, transferCoins);
 
 module.exports = router;

@@ -103,8 +103,14 @@ const Dashboard = () => {
   const [purchaseLoading, setPurchaseLoading] = useState<string | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const { user, logout } = useAuth();
-  const { coins, setLocalCoins } = useWallet();
+  const { activeCoins, coins, inactiveCoins, setLocalCoins } = useWallet();
   const navigate = useNavigate();
+
+  const [showAllTransactions, setShowAllTransactions] = useState(false);
+  const [showActiveBalance, setShowActiveBalance] = useState(false);
+  const [showInactiveBalance, setShowInactiveBalance] = useState(false);
+
+  const displayedTransactions = showAllTransactions ? transactions : transactions.slice(0, 3);
 
   const referralCode = referrals.referralCode || user?.referralCode || "";
 
@@ -222,13 +228,13 @@ const Dashboard = () => {
         </button>
       </div>
       <div className="max-w-md mx-auto space-y-5">
-        <div className="rounded p-5 bg-gradient-to-br from-[#dfe7ff] to-[#c9d6ff] text-slate-900 relative overflow-hidden">
+        {/* <div className="rounded p-5 bg-gradient-to-br from-[#dfe7ff] to-[#c9d6ff] text-slate-900 relative overflow-hidden">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-700">Coin Balance</p>
               <div className="flex items-center gap-2 mt-2">
                 <h2 className="text-lg font-bold">
-                  {showBalance ? <>{formatCoins(coins)}</> : "********"}
+                  {showBalance ? <>{formatCoins(activeCoins)}</> : "********"}
                 </h2>
                 <button
                   onClick={() => setShowBalance(!showBalance)}
@@ -241,6 +247,16 @@ const Dashboard = () => {
                   )}
                 </button>
               </div>
+              <div className="mt-6 grid grid-cols-2 gap-3 text-xs">
+            <div className="rounded bg-white/35 px-3 py-2">
+              <p className="font-medium text-slate-700">Inactive</p>
+              <p className="mt-1 font-bold">{showBalance ? formatCoins(inactiveCoins) : "****"}</p>
+            </div>
+            <div className="rounded bg-white/35 px-3 py-2">
+              <p className="font-medium text-slate-700">Active</p>
+              <p className="mt-1 font-bold">{showBalance ? formatCoins(activeCoins) : "****"}</p>
+            </div>
+          </div>
             </div>
             <button className="bg-[#0B2177] text-[#B6D8FF] text-xs font-semibold px-4 py-2 rounded-full">
               Withdraw
@@ -255,13 +271,101 @@ const Dashboard = () => {
             </span>
             Get Coins
           </button>
-        </div>
+        </div> */}
+
+        <section>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#dfe7ff] to-[#c9d6ff] p-5 text-slate-900 shadow-sm">
+            <div className="flex items-start justify-between justify-center gap-4">
+              {/* LEFT CONTENT */}
+              <div className="flex-1">
+                <p className="text-sm font-medium">Wallet Overview</p>
+
+                {/* WALLET BREAKDOWN */}
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  {/* INACTIVE WALLET */}
+                  <div className="rounded bg-white/40 p-3 backdrop-blur-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-600">
+                          Inactive Wallet
+                        </p>
+
+                        <p className="mt-2 text-sm font-bold text-slate-900">
+                          {showInactiveBalance ? formatCoins(inactiveCoins) : "********"}
+                        </p>
+
+                        <p className="mt-1 text-[10px] text-slate-600">Bonus/Game coins</p>
+                      </div>
+
+                      <button
+                        onClick={() => setShowInactiveBalance(!showInactiveBalance)}
+                        aria-label="Toggle inactive wallet"
+                        className="mt-1"
+                      >
+                        {showInactiveBalance ? (
+                          <Eye className="h-4 w-4 text-[#0B2177]" />
+                        ) : (
+                          <EyeOff className="h-4 w-4 text-[#0B2177]" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ACTIVE WALLET */}
+                  <div className="rounded bg-white/40 p-3 backdrop-blur-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-600">
+                          Active Wallet
+                        </p>
+
+                        <p className="mt-2 text-sm font-bold text-slate-900">
+                          {showActiveBalance ? formatCoins(activeCoins) : "********"}
+                        </p>
+
+                        <p className="mt-1 text-[10px] text-slate-600">Spendable coins</p>
+                      </div>
+
+                      <button
+                        onClick={() => setShowActiveBalance(!showActiveBalance)}
+                        aria-label="Toggle active wallet"
+                        className="mt-1"
+                      >
+                        {showActiveBalance ? (
+                          <Eye className="h-4 w-4 text-[#0B2177]" />
+                        ) : (
+                          <EyeOff className="h-4 w-4 text-[#0B2177]" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ACTION BUTTON */}
+              <button className="shrink-0 rounded-full bg-[#0B2177] px-4 py-2 text-xs font-semibold text-[#B6D8FF] transition hover:opacity-90">
+                Transfer
+              </button>
+            </div>
+
+            {/* GET COINS BUTTON */}
+            <button
+              onClick={() => navigate({ to: "/fundwallet" })}
+              className="mt-5 flex items-center gap-2 text-sm font-semibold text-slate-900"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
+                <Plus className="h-3 w-3 text-white" strokeWidth={3} />
+              </span>
+              Get Coins
+            </button>
+          </div>
+        </section>
 
         <section className="rounded bg-secondary p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-foreground">Referral Rewards</p>
-              <p className="mt-1 text-xs text-muted-foreground">Earn 50 coins per signup</p>
+              <p className="mt-1 text-xs text-muted-foreground">Earn 100 coins per signup</p>
             </div>
             <Gift className="h-5 w-5 text-amber-300" />
           </div>
@@ -495,7 +599,7 @@ const Dashboard = () => {
           </div>
         </section>
 
-        <section className="rounded bg-secondary p-5">
+        {/* <section className="rounded bg-secondary p-5">
           <div className="flex items-center justify-between">
             <h3 className="text-foreground font-semibold">Coin Transactions</h3>
             {historyLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
@@ -522,6 +626,57 @@ const Dashboard = () => {
                   </p>
                 </div>
               ))
+            ) : (
+              <p className="rounded bg-black/30 p-4 text-center text-sm text-muted-foreground">
+                No coin transactions yet.
+              </p>
+            )}
+          </div>
+        </section> */}
+
+        <section className="rounded bg-secondary p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-foreground font-semibold">Coin Transactions</h3>
+
+            {historyLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {transactions.length ? (
+              <>
+                {displayedTransactions.map((transaction) => (
+                  <div
+                    key={transaction._id}
+                    className="flex items-start justify-between gap-3 border-b border-border pb-3 last:border-0"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {transaction.packageName ||
+                          transaction.description ||
+                          transaction.type.replace(/_/g, " ")}
+                      </p>
+
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {new Date(transaction.createdAt).toLocaleDateString()} -{" "}
+                        {transaction.status}
+                      </p>
+                    </div>
+
+                    <p className="shrink-0 text-sm font-bold">
+                      {formatCoins(transaction.coins ?? transaction.amount ?? 0)}
+                    </p>
+                  </div>
+                ))}
+
+                {transactions.length > 4 && (
+                  <button
+                    onClick={() => setShowAllTransactions(!showAllTransactions)}
+                    className="mt-3 text-sm font-medium text-[#1688D1] hover:underline"
+                  >
+                    {showAllTransactions ? "Show Less" : "View All"}
+                  </button>
+                )}
+              </>
             ) : (
               <p className="rounded bg-black/30 p-4 text-center text-sm text-muted-foreground">
                 No coin transactions yet.

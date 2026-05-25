@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { apiClient } from "../services/api";
 
 type User = {
@@ -15,6 +8,8 @@ type User = {
   avatar?: string | null;
   referralCode?: string;
   wallet?: {
+    inactiveCoins?: number;
+    activeCoins?: number;
     coins?: number;
     balance?: number;
   };
@@ -42,9 +37,7 @@ export type AuthContextType = {
   logout: () => void;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(
-  undefined
-);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const initialAuthContext: AuthContextType = {
   user: null,
@@ -59,11 +52,7 @@ export const initialAuthContext: AuthContextType = {
   logout: () => {},
 };
 
-export const AuthProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -126,19 +115,14 @@ export const AuthProvider = ({
       register,
       logout,
     }),
-    [user, loading]
+    [user, loading],
   );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context)
-    throw new Error("useAuth must be used inside AuthProvider");
+  if (!context) throw new Error("useAuth must be used inside AuthProvider");
   return context;
 };

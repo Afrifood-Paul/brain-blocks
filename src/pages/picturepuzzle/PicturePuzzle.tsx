@@ -6,10 +6,10 @@ export default function PicturePuzzle() {
   const visible = new Set([0, 1, 2, 3, 6, 8]);
 
   return (
-    <main className="min-h-screen bg-black flex items-start justify-center px-4 py-6">
-      <section className="w-full max-w-xs flex flex-col items-center text-white">
+    <main className="min-h-screen overflow-x-hidden bg-background px-4 py-5">
+      <section className="mx-auto flex w-full max-w-md flex-col items-center text-foreground">
         <div className="w-full flex items-center justify-between gap-3">
-          <button  className="bg-tab-active px-4 py-1 text-foreground border border-primary/60">
+          <button className="bg-tab-active px-4 py-1 text-foreground border border-primary/60">
             Picture Puzzle
           </button>
 
@@ -20,7 +20,7 @@ export default function PicturePuzzle() {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-0.5 w-60 h-60">
+        <div className="mt-4 grid aspect-square w-full max-w-60 grid-cols-3 gap-0.5">
           {tiles.map((i) => {
             const row = Math.floor(i / 3);
             const col = i % 3;
@@ -48,7 +48,8 @@ export default function PicturePuzzle() {
         </div>
 
         <p className="mt-3 text-[10px] text-gray-400 text-center">
-         <span className="font-bold"> Hint:</span> Click and move tiles around till correct image is formed
+          <span className="font-bold"> Hint:</span> Click and move tiles around till correct image
+          is formed
         </p>
 
         <button className="mt-5 w-full bg-blue-600 hover:cursor-pointer hover:opacity-90 rounded-full py-3 font-semibold">

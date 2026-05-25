@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 import { useState } from "react";
 import { ChevronDown, Eye, EyeOff } from "lucide-react";
 
@@ -9,8 +9,8 @@ const Withdrawal = () => {
   const [showBalance, setShowBalance] = useState(false);
 
   return (
-    <main className="min-h-screen bg-black text-white px-4 pt-12 pb-10">
-      <div className="mx-auto w-full max-w-sm">
+    <main className="min-h-screen overflow-x-hidden bg-background px-4 py-5 text-foreground">
+      <div className="mx-auto w-full max-w-md">
         {/* Top Tabs */}
         <div className="flex items-start justify-between">
           <button className="bg-tab-active px-6 py-3 text-foreground border border-primary/60">
@@ -85,7 +85,6 @@ const Withdrawal = () => {
       </div>
     </main>
   );
-}
+};
 
-
-export default Withdrawal
+export default Withdrawal;

@@ -8,7 +8,7 @@ const playerSchema = new mongoose.Schema(
     name: { type: String, default: null },
     avatar: { type: String, default: null },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const moveSchema = new mongoose.Schema(
@@ -21,7 +21,7 @@ const moveSchema = new mongoose.Schema(
     fen: { type: String, required: true },
     movedAt: { type: Date, default: Date.now },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const gameSchema = new mongoose.Schema(
@@ -57,8 +57,11 @@ const gameSchema = new mongoose.Schema(
       enum: ["active", "checkmate", "draw", "abandoned"],
       default: "active",
     },
+    winnerUserId: { type: String, default: null },
+    settledAt: { type: Date, default: null },
+    result: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Game", gameSchema);

@@ -5,6 +5,11 @@ const LudoMatchPlayer = require("../models/LudoMatchPlayer");
 const LudoMoveHistory = require("../models/LudoMoveHistory");
 const Transaction = require("../models/Transaction");
 const User = require("../models/User");
+const {
+  activeCoinsExpression,
+  getWalletSnapshot,
+  inactiveCoinsExpression,
+} = require("../utils/wallet");
 
 const COLORS = ["red", "green", "yellow", "blue"];
 const START_OFFSETS = { red: 0, green: 13, yellow: 26, blue: 39 };
@@ -121,33 +126,6 @@ const advanceTurn = (room, keepTurn = false) => {
   startTurn(room, nextColor);
 };
 
-const lockCoins = async (userId, amount) => {
-  return User.findOneAndUpdate(
-    {
-      _id: userId,
-      $expr: {
-        $gte: [
-          { $ifNull: ["$wallet.coins", { $ifNull: ["$wallet.balance", 0] }] },
-          amount,
-        ],
-      },
-    },
-    [
-      {
-        $set: {
-          "wallet.coins": {
-            $subtract: [
-              { $ifNull: ["$wallet.coins", { $ifNull: ["$wallet.balance", 0] }] },
-              amount,
-            ],
-          },
-        },
-      },
-    ],
-    { new: true }
-  ).select("wallet username firstName lastName avatar");
-};
-
 const createTransaction = (data) =>
   Transaction.create(data).catch((error) => {
     if (error.code === 11000) return null;
@@ -159,18 +137,15 @@ const refundRoom = async (room, reason) => {
     const locked = Number(room.lockedBets.get(String(player.userId)) || 0);
     if (!locked) continue;
 
-    await User.findByIdAndUpdate(player.userId, {
-      $inc: { "wallet.coins": locked },
-    });
-
     await createTransaction({
       userId: player.userId,
       type: "ludo_bet_refund",
       amount: locked,
       coins: locked,
+      walletType: "inactive",
       status: "success",
       reference: `ludo_refund_${room.roomId}_${player.userId}`,
-      description: "Ludo bet refunded",
+      description: "Ludo bet released",
       metadata: { roomId: room.roomId, reason },
     });
   }
@@ -182,23 +157,53 @@ const finishRoom = async (room, winnerColor) => {
   const winner = room.players.find((player) => player.color === winnerColor);
   if (!winner) return;
 
-  const pot = Number(room.pot || room.betAmount * room.players.length);
-  const platformFee = Math.floor((pot * Number(room.platformFeePercent || 0)) / 100);
-  const payout = Math.max(0, pot - platformFee);
+  const betAmount = Number(room.betAmount || 0);
+  const pot = betAmount * 2;
+  const platformFee = 0;
+  const payout = betAmount * 2;
 
-  await User.findByIdAndUpdate(winner.userId, {
-    $inc: { "wallet.coins": payout },
+  const creditedWinner = await User.findOneAndUpdate(
+    {
+      _id: winner.userId,
+      $expr: { $gte: [inactiveCoinsExpression, betAmount] },
+    },
+    [
+      {
+        $set: {
+          "wallet.inactiveCoins": { $subtract: [inactiveCoinsExpression, betAmount] },
+          "wallet.activeCoins": { $add: [activeCoinsExpression, payout] },
+          "wallet.coins": { $add: [activeCoinsExpression, payout] },
+          "wallet.balance": { $add: [activeCoinsExpression, payout] },
+        },
+      },
+    ],
+    { new: true },
+  ).select("wallet");
+
+  if (!creditedWinner) return;
+
+  await createTransaction({
+    userId: winner.userId,
+    type: "bet_conversion",
+    amount: betAmount,
+    coins: betAmount,
+    walletType: "inactive",
+    status: "success",
+    reference: `ludo_conversion_${room.roomId}_${winner.userId}`,
+    description: "Ludo bet converted from inactive coins",
+    metadata: { roomId: room.roomId },
   });
 
   await createTransaction({
     userId: winner.userId,
-    type: "ludo_prize",
+    type: "game_winnings",
     amount: payout,
     coins: payout,
+    walletType: "active",
     status: "success",
     reference: `ludo_prize_${room.roomId}_${winner.userId}`,
     description: "Ludo match prize",
-    metadata: { roomId: room.roomId, pot, platformFee },
+    metadata: { roomId: room.roomId, pot, platformFee, wallet: getWalletSnapshot(creditedWinner) },
   });
 
   const players = room.players.map((player) => ({
@@ -223,7 +228,7 @@ const finishRoom = async (room, winnerColor) => {
       status: "finished",
       finishedAt: new Date(),
     },
-    { upsert: true, new: true }
+    { upsert: true, new: true },
   );
 
   await Promise.all(
@@ -231,9 +236,9 @@ const finishRoom = async (room, winnerColor) => {
       LudoMatchPlayer.findOneAndUpdate(
         { roomId: room.roomId, userId: player.userId },
         { $set: { ...player, roomId: room.roomId } },
-        { upsert: true }
-      )
-    )
+        { upsert: true },
+      ),
+    ),
   );
 
   room.status = "finished";
@@ -265,7 +270,7 @@ const startMatch = async (room) => {
       status: "active",
       startedAt: new Date(),
     },
-    { upsert: true, new: true }
+    { upsert: true, new: true },
   );
 };
 
@@ -343,9 +348,7 @@ module.exports = (io) => {
             return;
           }
 
-          const existing = room.players.find((player) =>
-            sameId(player.userId, socket.data.userId)
-          );
+          const existing = room.players.find((player) => sameId(player.userId, socket.data.userId));
 
           if (existing) {
             existing.socketId = socket.id;
@@ -362,14 +365,16 @@ module.exports = (io) => {
               return;
             }
 
-            const user = await lockCoins(socket.data.userId, room.betAmount);
+            const user = await User.findById(socket.data.userId).select(
+              "username firstName lastName avatar",
+            );
             if (!user) {
-              socket.emit("ludo_error", { message: "Insufficient coins" });
+              socket.emit("ludo_error", { message: "User not found" });
               return;
             }
 
             const color = COLORS.find(
-              (item) => !room.players.some((player) => player.color === item)
+              (item) => !room.players.some((player) => player.color === item),
             );
 
             room.players.push({
@@ -383,17 +388,6 @@ module.exports = (io) => {
             });
             room.lockedBets.set(String(user._id), room.betAmount);
             room.pot = Number(room.pot || 0) + Number(room.betAmount);
-
-            await createTransaction({
-              userId: user._id,
-              type: "ludo_bet_locked",
-              amount: room.betAmount,
-              coins: room.betAmount,
-              status: "success",
-              reference: `ludo_lock_${room.roomId}_${user._id}`,
-              description: "Ludo bet locked",
-              metadata: { roomId: room.roomId },
-            });
           }
 
           maybeStartCountdown(room);

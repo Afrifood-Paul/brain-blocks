@@ -106,7 +106,7 @@ const getTimeLeft = (iso?: string | null) => {
 const Ludo = () => {
   const navigate = useNavigate();
   const { loading: authLoading, isAuthenticated } = useAuth();
-  const { coins, fetchBalance, setLocalCoins } = useWallet();
+  const { activeCoins, fetchBalance, inactiveCoins, setLocalCoins } = useWallet();
   const [rooms, setRooms] = useState<LudoRoom[]>([]);
   const [room, setRoom] = useState<LudoRoom | null>(null);
   const [betAmount, setBetAmount] = useState(200);
@@ -130,7 +130,7 @@ const Ludo = () => {
 
   const playerColor = room?.playerColor || null;
   const isMyTurn = Boolean(
-    room?.status === "active" && playerColor && room.currentTurn === playerColor
+    room?.status === "active" && playerColor && room.currentTurn === playerColor,
   );
   const currentPlayer = room?.players.find((player) => player.color === room.currentTurn);
   const winner = room?.players.find((player) => player.color === room.winnerColor);
@@ -199,15 +199,18 @@ const Ludo = () => {
         animationTimers.current.push(timer);
       });
 
-      const finishTimer = window.setTimeout(() => {
-        setDisplayBoard(finalBoard);
-        setMoveEffect(null);
-        isAnimatingMove.current = false;
-      }, steps.length * 120 + 180);
+      const finishTimer = window.setTimeout(
+        () => {
+          setDisplayBoard(finalBoard);
+          setMoveEffect(null);
+          isAnimatingMove.current = false;
+        },
+        steps.length * 120 + 180,
+      );
 
       animationTimers.current.push(finishTimer);
     },
-    [clearAnimationTimers, cloneBoard]
+    [clearAnimationTimers, cloneBoard],
   );
 
   const loadRooms = useCallback(async () => {
@@ -240,9 +243,7 @@ const Ludo = () => {
     const applyState = (nextRoom: LudoRoom, options: { preserveDiceMotion?: boolean } = {}) => {
       setRoom(nextRoom);
       animateMove(nextRoom);
-      setRooms((current) =>
-        current.filter((item) => item.roomId !== nextRoom.roomId)
-      );
+      setRooms((current) => current.filter((item) => item.roomId !== nextRoom.roomId));
       setJoiningRoomId(null);
       if (!nextRoom.lastDice && !options.preserveDiceMotion) {
         setVisibleDice(null);
@@ -374,7 +375,9 @@ const Ludo = () => {
         }`}
       >
         <div className="flex items-center gap-3">
-          <div className={`h-11 w-11 overflow-hidden rounded-full border-2 ${colorClasses[displayColor]}`}>
+          <div
+            className={`h-11 w-11 overflow-hidden rounded-full border-2 ${colorClasses[displayColor]}`}
+          >
             <img
               src={getAvatarSrc(player?.avatar)}
               alt={getDisplayName(player)}
@@ -428,8 +431,8 @@ const Ludo = () => {
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 py-5 text-foreground">
-      <div className="mx-auto max-w-6xl space-y-5">
+    <main className="min-h-screen max-w-md mx-auto bg-background px-4 py-5 text-foreground">
+      <div className="mx-auto w-full max-w-md space-y-5 xl:max-w-6xl">
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={() => navigate({ to: "/dashboard" })}
@@ -440,13 +443,23 @@ const Ludo = () => {
           </button>
           <div className="flex items-center gap-2 rounded-full bg-[#dfe7ff] px-4 py-2 text-sm font-bold text-slate-900">
             <Coins className="h-4 w-4" />
-            {formatCoins(coins)}
+            {formatCoins(activeCoins)}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="rounded bg-secondary p-3">
+            <p className="text-muted-foreground">Inactive</p>
+            <p className="mt-1 font-bold">{formatCoins(inactiveCoins)}</p>
+          </div>
+          <div className="rounded bg-secondary p-3">
+            <p className="text-muted-foreground">Active</p>
+            <p className="mt-1 font-bold">{formatCoins(activeCoins)}</p>
           </div>
         </div>
 
         {!room ? (
-          <div className="grid gap-5 lg:grid-cols-[380px_1fr]">
-            <section className="rounded bg-secondary p-5">
+          <div className="grid min-w-0 gap-5">
+            <section className="min-w-0 rounded bg-secondary p-5">
               <div className="flex items-center gap-3">
                 <img src={ludoIcon} alt="Ludo" className="h-12 w-12 object-contain" />
                 <div>
@@ -461,6 +474,7 @@ const Ludo = () => {
                   <input
                     type="number"
                     min={1}
+                    max={5000}
                     value={betAmount}
                     onChange={(event) => setBetAmount(Number(event.target.value))}
                     className="mt-2 h-12 w-full rounded-full bg-white px-4 text-sm text-black outline-none"
@@ -504,7 +518,7 @@ const Ludo = () => {
               </div>
             </section>
 
-            <section className="rounded bg-secondary p-5">
+            <section className="min-w-0 rounded bg-secondary p-5">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-bold">Available Rooms</h2>
@@ -528,7 +542,7 @@ const Ludo = () => {
                   rooms.map((item) => (
                     <article
                       key={item.roomId}
-                      className="flex flex-col gap-3 rounded-lg border border-border bg-black/30 p-4 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex min-w-0 flex-col gap-3 rounded-lg border border-border bg-black/30 p-4 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div>
                         <p className="font-semibold">{formatCoins(item.betAmount)} table</p>
@@ -562,9 +576,9 @@ const Ludo = () => {
             </section>
           </div>
         ) : (
-          <div className="grid gap-5 xl:grid-cols-[280px_1fr_280px]">
-            <aside className="space-y-3">
-              <section className="rounded-lg bg-secondary p-4">
+          <div className="grid min-w-0 gap-5">
+            <aside className="min-w-0 space-y-3">
+              <section className="rounded bg-secondary p-4">
                 <p className="text-xs uppercase text-muted-foreground">Match Status</p>
                 <h1 className="mt-1 text-2xl font-bold capitalize">{room.status}</h1>
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
@@ -582,13 +596,15 @@ const Ludo = () => {
               {colors.slice(0, room.maxPlayers).map((color) =>
                 renderPlayerCard(
                   room.players.find((player) => player.color === color),
-                  color
-                )
+                  color,
+                ),
               )}
             </aside>
 
-            <section className="space-y-4">
-              <div className="rounded-lg bg-secondary p-4">
+            {renderBoard()}
+
+            <section className="min-w-0 space-y-4">
+              <div className="rounded bg-secondary p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-xs uppercase text-muted-foreground">Current Turn</p>
@@ -596,14 +612,14 @@ const Ludo = () => {
                       {currentPlayer ? getDisplayName(currentPlayer) : "Waiting for players"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 flex-wrap items-center gap-3">
                     {room.status === "countdown" && (
                       <div className="rounded-full bg-amber-300 px-4 py-2 text-sm font-black text-slate-950">
                         Starts in {countdownLeft}s
                       </div>
                     )}
                     {room.status === "active" && (
-                      <div className="flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-bold">
+                      <div className="flex items-center gap-2 rounded bg-muted px-4 py-2 text-sm font-bold">
                         <Clock3 className="h-4 w-4 text-primary" />
                         {turnLeft}s
                       </div>
@@ -612,11 +628,11 @@ const Ludo = () => {
                 </div>
               </div>
 
-              {renderBoard()}
+              {/* {renderBoard()} */}
             </section>
 
-            <aside className="space-y-4">
-              <section className="rounded-lg bg-secondary p-5 text-center">
+            <aside className="min-w-0 space-y-4">
+              <section className="rounded bg-secondary p-5 text-center">
                 <p className="text-xs uppercase text-muted-foreground">Dice</p>
                 <LudoDice
                   value={visibleDice ?? room.lastDice}
@@ -633,14 +649,16 @@ const Ludo = () => {
                 </p>
               </section>
 
-              <section className="rounded-lg bg-secondary p-5">
+              <section className="rounded bg-secondary p-5">
                 <h2 className="font-bold">Room</h2>
                 <p className="mt-2 break-all rounded bg-black/30 p-3 font-mono text-xs text-muted-foreground">
                   {room.roomId}
                 </p>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/ludo?roomId=${room.roomId}`);
+                    navigator.clipboard.writeText(
+                      `${window.location.origin}/ludo?roomId=${room.roomId}`,
+                    );
                     toast.success("Invite link copied");
                   }}
                   className="mt-3 w-full rounded-full bg-[#9FC8F6] px-4 py-2 text-sm font-bold text-[#0B2177]"
@@ -652,13 +670,11 @@ const Ludo = () => {
 
             {(room.status === "finished" || room.status === "cancelled") && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4">
-                <div className="ludo-result-pop w-full max-w-sm rounded-lg bg-white p-6 text-center text-slate-950">
+                <div className="ludo-result-pop w-full max-w-sm rounded bg-white p-6 text-center text-slate-950">
                   {room.status === "finished" ? (
                     <>
                       <Crown className="mx-auto h-12 w-12 text-amber-500" />
-                      <h2 className="mt-3 text-2xl font-black">
-                        {getDisplayName(winner)} wins
-                      </h2>
+                      <h2 className="mt-3 text-2xl font-black">{getDisplayName(winner)} wins</h2>
                       <p className="mt-2 text-sm text-slate-600">
                         Prize paid: {formatCoins(room.result?.payout || 0)}
                       </p>

@@ -3,22 +3,20 @@ import { ChevronDown, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { formatCoins, useWallet } from "@/context/WalletContext";
 
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 const Fundwallet = () => {
   const navigate = useNavigate();
   const { coins, loading, error, fundWallet, verifyFunding } = useWallet();
   const [amount, setAmount] = useState("");
   const [showBalance, setShowBalance] = useState(true);
-  const [selectedProvider, setSelectedProvider] = useState<"paystack" | "opay">(
-    "paystack"
-  );
+  const [selectedProvider, setSelectedProvider] = useState<"paystack" | "opay">("paystack");
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const reference =
-      params.get("reference") ||
-      params.get("trxref") ||
-      params.get("orderNo");
+    const reference = params.get("reference") || params.get("trxref") || params.get("orderNo");
     const provider =
       (params.get("provider") as "paystack" | "opay" | null) ||
       (reference?.includes("_paystack_") ? "paystack" : null) ||
@@ -33,8 +31,8 @@ const Fundwallet = () => {
         setMessage("Wallet funded successfully");
         navigate({ to: "/fundwallet", replace: true });
       })
-      .catch((err: any) => {
-        setMessage(err.message || "Payment verification failed");
+      .catch((err: unknown) => {
+        setMessage(getErrorMessage(err, "Payment verification failed"));
       });
   }, [navigate, verifyFunding]);
 
@@ -51,13 +49,13 @@ const Fundwallet = () => {
 
     try {
       await fundWallet(provider, value);
-    } catch (err: any) {
-      setMessage(err.message || "Unable to start payment");
+    } catch (err: unknown) {
+      setMessage(getErrorMessage(err, "Unable to start payment"));
     }
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-4 pt-10 pb-16 flex justify-center">
+    <main className="min-h-screen overflow-x-hidden bg-background px-4 py-5 text-foreground">
       <div className="mx-auto w-full max-w-md">
         {/* Top Section */}
         <div className="flex items-center justify-between mb-6">
@@ -68,9 +66,7 @@ const Fundwallet = () => {
           <div className="text-right">
             <p className="text-sm text-gray-400">Coin Balance</p>
             <div className="flex items-center gap-2 justify-end">
-              <span className="font-semibold">
-                {showBalance ? formatCoins(coins) : "********"}
-              </span>
+              <span className="font-semibold">{showBalance ? formatCoins(coins) : "********"}</span>
               <button onClick={() => setShowBalance((value) => !value)}>
                 {showBalance ? (
                   <Eye size={16} className="text-gray-400" />
@@ -86,9 +82,7 @@ const Fundwallet = () => {
         <div className="mb-4">
           <div className="flex items-center justify-between bg-[#9FC8F6] text-[#0B2177] px-6 py-5 rounded-full cursor-pointer">
             <span className="text-sm font-medium">
-              {selectedProvider === "paystack"
-                ? "Get coins with Paystack"
-                : "Get coins with Opay"}
+              {selectedProvider === "paystack" ? "Get coins with Paystack" : "Get coins with Opay"}
             </span>
             <ChevronDown size={18} />
           </div>
@@ -106,9 +100,7 @@ const Fundwallet = () => {
           />
         </div>
 
-        {(message || error) && (
-          <p className="mb-4 text-sm text-red-300">{message || error}</p>
-        )}
+        {(message || error) && <p className="mb-4 text-sm text-red-300">{message || error}</p>}
 
         <div className="grid grid-cols-2 gap-3">
           <button
@@ -116,9 +108,7 @@ const Fundwallet = () => {
             onClick={() => submitFunding("paystack")}
             className="w-full bg-primary py-4 rounded-full font-semibold disabled:opacity-60"
           >
-            {loading && selectedProvider === "paystack"
-              ? "Please wait..."
-              : "Pay with Paystack"}
+            {loading && selectedProvider === "paystack" ? "Please wait..." : "Pay with Paystack"}
           </button>
 
           <button
@@ -126,13 +116,11 @@ const Fundwallet = () => {
             onClick={() => submitFunding("opay")}
             className="w-full bg-[#9FC8F6] py-4 rounded-full font-semibold text-[#0B2177] disabled:opacity-60"
           >
-            {loading && selectedProvider === "opay"
-              ? "Please wait..."
-              : "Pay with Opay"}
+            {loading && selectedProvider === "opay" ? "Please wait..." : "Pay with Opay"}
           </button>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

@@ -2,8 +2,7 @@ const crypto = require("crypto");
 const Package = require("../models/Package");
 const Transaction = require("../models/Transaction");
 const User = require("../models/User");
-
-const getWalletCoins = (user) => user.wallet?.coins ?? user.wallet?.balance ?? 0;
+const { activeCoinsExpression, getWalletSnapshot } = require("../utils/wallet");
 
 exports.purchasePackage = async (req, res) => {
   const { packageId, userId } = req.body;
@@ -27,34 +26,27 @@ exports.purchasePackage = async (req, res) => {
       return res.status(404).json({ msg: "Package not found" });
     }
 
-    await User.updateOne(
+    const user = await User.findOneAndUpdate(
       {
         _id: req.user._id,
-        "wallet.coins": { $exists: false },
-        "wallet.balance": { $type: "number" },
+        $expr: { $gte: [activeCoinsExpression, selectedPackage.priceCoins] },
       },
       [
         {
           $set: {
-            "wallet.coins": "$wallet.balance",
+            "wallet.activeCoins": {
+              $subtract: [activeCoinsExpression, selectedPackage.priceCoins],
+            },
+            "wallet.coins": { $subtract: [activeCoinsExpression, selectedPackage.priceCoins] },
+            "wallet.balance": { $subtract: [activeCoinsExpression, selectedPackage.priceCoins] },
           },
         },
       ],
-    );
-
-    const user = await User.findOneAndUpdate(
-      {
-        _id: req.user._id,
-        "wallet.coins": { $gte: selectedPackage.priceCoins },
-      },
-      {
-        $inc: { "wallet.coins": -selectedPackage.priceCoins },
-      },
       { new: true },
     ).select("wallet");
 
     if (!user) {
-      return res.status(400).json({ msg: "Insufficient coins" });
+      return res.status(400).json({ msg: "Insufficient active coins" });
     }
 
     const reference = `package_purchase_${crypto.randomUUID()}`;
@@ -63,6 +55,7 @@ exports.purchasePackage = async (req, res) => {
       type: "marketplace_purchase",
       amount: selectedPackage.priceCoins,
       coins: selectedPackage.priceCoins,
+      walletType: "active",
       status: "success",
       reference,
       description: `${selectedPackage.network} ${selectedPackage.name}`,
@@ -78,12 +71,9 @@ exports.purchasePackage = async (req, res) => {
       },
     });
 
-    const coins = getWalletCoins(user);
-
     res.status(201).json({
       msg: "Package purchased successfully",
-      coins,
-      balance: coins,
+      ...getWalletSnapshot(user),
       transaction,
       package: selectedPackage,
     });

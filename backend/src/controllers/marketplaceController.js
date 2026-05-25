@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const Transaction = require("../models/Transaction");
 const User = require("../models/User");
+const { activeCoinsExpression, getWalletSnapshot } = require("../utils/wallet");
 
 const products = [
   {
@@ -63,8 +64,6 @@ const products = [
 
 const findProduct = (productId) => products.find((product) => product.id === productId);
 
-const getWalletCoins = (user) => user.wallet?.coins ?? user.wallet?.balance ?? 0;
-
 exports.getProducts = async (req, res) => {
   const category = String(req.query.category || "")
     .trim()
@@ -112,21 +111,15 @@ exports.purchaseProduct = async (req, res) => {
       {
         _id: req.user._id,
         $expr: {
-          $gte: [
-            { $ifNull: ["$wallet.coins", { $ifNull: ["$wallet.balance", 0] }] },
-            product.coins,
-          ],
+          $gte: [activeCoinsExpression, product.coins],
         },
       },
       [
         {
           $set: {
-            "wallet.coins": {
-              $subtract: [
-                { $ifNull: ["$wallet.coins", { $ifNull: ["$wallet.balance", 0] }] },
-                product.coins,
-              ],
-            },
+            "wallet.activeCoins": { $subtract: [activeCoinsExpression, product.coins] },
+            "wallet.coins": { $subtract: [activeCoinsExpression, product.coins] },
+            "wallet.balance": { $subtract: [activeCoinsExpression, product.coins] },
           },
         },
       ],
@@ -134,7 +127,7 @@ exports.purchaseProduct = async (req, res) => {
     ).select("wallet");
 
     if (!user) {
-      return res.status(400).json({ msg: "Insufficient coins" });
+      return res.status(400).json({ msg: "Insufficient active coins" });
     }
 
     const reference = `marketplace_${crypto.randomUUID()}`;
@@ -143,6 +136,7 @@ exports.purchaseProduct = async (req, res) => {
       type: "marketplace_purchase",
       amount: product.coins,
       coins: product.coins,
+      walletType: "active",
       status: "success",
       reference,
       description: `Marketplace purchase: ${product.name}`,
@@ -152,12 +146,9 @@ exports.purchaseProduct = async (req, res) => {
       },
     });
 
-    const coins = getWalletCoins(user);
-
     res.status(201).json({
       msg: "Purchase successful",
-      coins,
-      balance: coins,
+      ...getWalletSnapshot(user),
       transaction,
       product,
     });
