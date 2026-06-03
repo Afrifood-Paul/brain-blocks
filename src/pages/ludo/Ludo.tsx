@@ -422,6 +422,39 @@ const Ludo = () => {
     );
   };
 
+  const renderLobbySeat = (player?: LudoPlayer, fallback = "Open seat") => {
+    const displayColor = player?.color || "blue";
+
+    return (
+      <div className="flex w-full items-center justify-between gap-3 rounded px-0 py-3 sm:px-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <div
+            className={`h-12 w-12 shrink-0 overflow-hidden rounded-full border-4 ${colorClasses[displayColor]} sm:h-14 sm:w-14`}
+          >
+            <img
+              src={getAvatarSrc(player?.avatar)}
+              alt={player ? getDisplayName(player) : fallback}
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-base font-bold leading-tight sm:text-xl">
+              {player ? `@${getDisplayName(player)}` : fallback}
+            </p>
+            <p className="text-xs text-white/60">
+              {player ? `${displayColor} player` : "Waiting for player"}
+            </p>
+          </div>
+        </div>
+        <div className="shrink-0 rounded border border-[#008FF0] bg-[#46597A] px-4 py-2">
+          <span className="text-xs font-bold capitalize text-foreground">
+            {player ? "Ready" : "Open"}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   if (authLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background">
@@ -533,7 +566,7 @@ const Ludo = () => {
                 </button>
               </div>
 
-              <div className="mt-5 space-y-3">
+              <div className="mt-5 space-y-6">
                 {loadingRooms ? (
                   <div className="flex h-28 items-center justify-center">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -542,26 +575,73 @@ const Ludo = () => {
                   rooms.map((item) => (
                     <article
                       key={item.roomId}
-                      className="flex min-w-0 flex-col gap-3 rounded-lg border border-border bg-black/30 p-4 sm:flex-row sm:items-center sm:justify-between"
+                      className="mx-auto flex w-full max-w-md flex-col items-center text-white"
                     >
-                      <div>
-                        <p className="font-semibold">{formatCoins(item.betAmount)} table</p>
-                        <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3.5 w-3.5" />
-                            {item.players.length}/{item.maxPlayers}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock3 className="h-3.5 w-3.5" />
-                            {item.turnSeconds}s turns
-                          </span>
-                          <span>{item.status}</span>
+                      {renderLobbySeat(item.players[0], "Host seat")}
+
+                      <div className="flex w-full justify-center">
+                        <div className="grid aspect-square w-full max-w-[260px] grid-rows-[1fr_auto_1fr] overflow-hidden border-4 border-[#333333] bg-[#111827] sm:max-w-[320px] sm:border-8">
+                          <div className="grid grid-cols-3">
+                            <div className="bg-emerald-500/90" />
+                            <div className="bg-white" />
+                            <div className="bg-red-500/90" />
+                          </div>
+
+                          <div className="grid grid-cols-[1fr_auto_1fr]">
+                            <div className="grid grid-rows-3">
+                              <div className="bg-white" />
+                              <div className="bg-yellow-400/90" />
+                              <div className="bg-white" />
+                            </div>
+
+                            <div className="flex h-28 w-28 flex-col items-center justify-center bg-slate-950 px-3 text-center sm:h-32 sm:w-32">
+                              <p className="text-xs font-semibold uppercase text-white/60">Room</p>
+                              <p className="mt-1 text-lg font-black leading-tight">
+                                {formatCoins(item.betAmount)}
+                              </p>
+                              <p className="mt-1 max-w-full truncate font-mono text-[10px] text-white/50">
+                                {item.roomId}
+                              </p>
+                            </div>
+
+                            <div className="grid grid-rows-3">
+                              <div className="bg-white" />
+                              <div className="bg-sky-500/90" />
+                              <div className="bg-white" />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-3">
+                            <div className="bg-yellow-400/90" />
+                            <div className="bg-white" />
+                            <div className="bg-sky-500/90" />
+                          </div>
                         </div>
                       </div>
+
+                      <div className="grid w-full grid-cols-3 gap-2 py-3 text-center text-xs">
+                        <div className="rounded border border-[#008FF0] bg-[#46597A] px-2 py-2">
+                          <Users className="mx-auto mb-1 h-3.5 w-3.5" />
+                          <p className="font-bold">
+                            {item.players.length}/{item.maxPlayers}
+                          </p>
+                        </div>
+                        <div className="rounded border border-[#008FF0] bg-[#46597A] px-2 py-2">
+                          <Clock3 className="mx-auto mb-1 h-3.5 w-3.5" />
+                          <p className="font-bold">{item.turnSeconds}s</p>
+                        </div>
+                        <div className="rounded border border-[#008FF0] bg-[#46597A] px-2 py-2">
+                          <p className="mb-1 text-[10px] uppercase text-white/60">Status</p>
+                          <p className="truncate font-bold capitalize">{item.status}</p>
+                        </div>
+                      </div>
+
+                      {renderLobbySeat(item.players[1], "Opponent seat")}
+
                       <button
                         onClick={() => joinRoom(item.roomId)}
                         disabled={joiningRoomId === item.roomId}
-                        className="rounded-full bg-[#9FC8F6] px-5 py-2 text-sm font-bold text-[#0B2177] disabled:opacity-60"
+                        className="mt-2 w-full rounded-full bg-[#9FC8F6] px-5 py-3 text-sm font-bold text-[#0B2177] disabled:opacity-60"
                       >
                         {joiningRoomId === item.roomId ? "Joining..." : "Join"}
                       </button>

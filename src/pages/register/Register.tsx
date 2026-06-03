@@ -53,18 +53,22 @@ const Register = () => {
     } = form;
 
     // validation
-    if (!email || !password || !firstName || !lastName) {
+    if (!email || !password || !firstName || !lastName || !username || !dob || !phone || !state) {
       setError("Please fill required fields");
       return;
     }
+
+
 
     if (password !== verifyPassword) {
       setError("Passwords do not match");
       return;
     }
 
+
     try {
       setLoading(true);
+
 
       await register({
         firstName,
@@ -100,11 +104,13 @@ const Register = () => {
             <InputField
               placeholder="First Name"
               value={form.firstName}
+              required
               onChange={(v) => updateField("firstName", v)}
             />
             <InputField
               placeholder="Last Name"
               value={form.lastName}
+              required
               onChange={(v) => updateField("lastName", v)}
             />
           </div>
@@ -112,7 +118,9 @@ const Register = () => {
           {/* Email */}
           <InputField
             placeholder="Email"
+            type="email"
             value={form.email}
+            required
             onChange={(v) => updateField("email", v)}
           />
 
@@ -122,6 +130,7 @@ const Register = () => {
               placeholder="Password"
               type="password"
               value={form.password}
+              required
               onChange={(v) => updateField("password", v)}
             />
 
@@ -139,12 +148,15 @@ const Register = () => {
             <InputField
               placeholder="Username"
               value={form.username}
+              required
               onChange={(v) => updateField("username", v)}
             />
+           
             <InputField
               placeholder="Date of Birth"
               type="date"
               value={form.dob}
+              required
               onChange={(v) => updateField("dob", v)}
             />
           </div>
@@ -155,7 +167,8 @@ const Register = () => {
             <InputField
               placeholder="Phone Number"
               value={form.phone}
-              type="phone"
+              type="tel"
+              required
               onChange={(v) => updateField("phone", v)}
             />
 
@@ -175,6 +188,7 @@ const Register = () => {
           <select
             value={form.state}
             onChange={(e) => updateField("state", e.target.value)}
+            required
             className="h-12 w-full rounded-full bg-white px-5 text-sm text-black outline-none"
           >
             <option value="" className="text-gray-400">
@@ -221,15 +235,17 @@ type InputProps = {
   onChange: (value: string) => void;
   type?: string;
   full?: boolean;
+  required?: boolean;
 };
 
-function InputField({ placeholder, value, onChange, type = "text" }: InputProps) {
+function InputField({ placeholder, value, onChange, type = "text",  required = false, }: InputProps) {
   return (
     <input
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
+      required={required}
       className="h-12 w-full rounded-full bg-white px-5 text-sm text-black placeholder:text-gray-400 outline-none"
     />
   );

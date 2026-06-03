@@ -49,7 +49,7 @@ const buildUsername = async (username, email) => {
 };
 
 exports.register = async (req, res) => {
-  const { firstName, lastName, username, email, password, dob, phone, referralCode } = req.body;
+  const { firstName, lastName, username, email, password, dob, phone, state, referralCode } = req.body;
 
   try {
     const cleanEmail = String(email || "")
@@ -101,6 +101,7 @@ exports.register = async (req, res) => {
       passwordHash: hashed,
       dob,
       phone,
+      state,
       avatar,
       referralCode: newReferralCode,
       referredBy: referrer?._id || null,

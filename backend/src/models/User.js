@@ -50,6 +50,10 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
 
+     state:{
+      type: String,
+     },
+
     avatar: {
       type: String,
       default: "",

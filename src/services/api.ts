@@ -54,10 +54,10 @@ class ApiClient {
       data = null;
     }
 
-    // ✅ IMPORTANT FIX (this was your main issue)
+    // ✅ IMPORTANT FIX
     if (!res.ok) {
       const error: ApiError = new Error(data?.msg || "Request failed");
-      error.status = res.status; // <-- THIS FIXES YOUR 400/409/404 handling
+      error.status = res.status; // <-- THIS FIXES 400/409/404 handling
       throw error;
     }
 
@@ -67,15 +67,16 @@ class ApiClient {
   async register(data: {
     firstName: string;
     lastName: string;
-    username?: string;
+    username: string;
     email: string;
     password: string;
-    dob?: string;
-    phone?: string;
-    state?: string;
+    dob: string;
+    phone: string;
+    state: string;
     referralCode?: string;
     avatar?: File | null;
   }) {
+    console.log("State:", data.state);
     const body = new FormData();
     body.append("firstName", data.firstName);
     body.append("lastName", data.lastName);
@@ -85,6 +86,7 @@ class ApiClient {
     if (data.username) body.append("username", data.username);
     if (data.dob) body.append("dob", data.dob);
     if (data.phone) body.append("phone", data.phone);
+    if (data.state) body.append("state", data.state);
     if (data.referralCode) body.append("referralCode", data.referralCode);
     if (data.avatar) body.append("avatar", data.avatar);
 
