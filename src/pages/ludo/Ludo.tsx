@@ -36,11 +36,6 @@ type LudoPlayer = {
   online: boolean;
 };
 
-type LudoToken = {
-  id: number;
-  progress: number;
-};
-
 type LudoRoom = {
   roomId: string;
   betAmount: number;

@@ -49,7 +49,8 @@ const buildUsername = async (username, email) => {
 };
 
 exports.register = async (req, res) => {
-  const { firstName, lastName, username, email, password, dob, phone, state, referralCode } = req.body;
+  const { firstName, lastName, username, email, password, dob, phone, state, referralCode } =
+    req.body;
 
   try {
     const cleanEmail = String(email || "")

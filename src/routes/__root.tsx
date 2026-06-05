@@ -1,6 +1,14 @@
-import { Outlet, Link, createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
+import {
+  HeadContent,
+  Link,
+  Outlet,
+  Scripts,
+  createRootRouteWithContext,
+} from "@tanstack/react-router";
+
 import type { RouterContext } from "@/router/context";
-import { Toaster } from "@/components/ui/sonner";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import appCss from "../styles.css?url";
 
@@ -45,7 +53,7 @@ function RootComponent() {
   return (
     <>
       <Outlet />
-      <Toaster richColors position="top-center" />
+       <ToastContainer position="top-center" autoClose={3000} />
     </>
   );
 }

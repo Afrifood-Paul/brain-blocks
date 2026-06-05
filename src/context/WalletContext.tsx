@@ -95,6 +95,10 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         callbackUrl,
       });
 
+      if (!res.authorizationUrl) {
+        throw new Error("Payment provider did not return a payment URL");
+      }
+
       window.location.href = res.authorizationUrl;
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Unable to initialize payment"));

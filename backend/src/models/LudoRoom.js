@@ -16,7 +16,7 @@ const playerSchema = new mongoose.Schema(
     joinedAt: { type: Date, default: Date.now },
     disconnectedAt: { type: Date, default: null },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const tokenSchema = new mongoose.Schema(
@@ -24,7 +24,7 @@ const tokenSchema = new mongoose.Schema(
     id: { type: Number, required: true },
     progress: { type: Number, default: -1 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const ludoRoomSchema = new mongoose.Schema(
@@ -71,7 +71,7 @@ const ludoRoomSchema = new mongoose.Schema(
     finishedAt: { type: Date, default: null },
     cancelledAt: { type: Date, default: null },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("LudoRoom", ludoRoomSchema);

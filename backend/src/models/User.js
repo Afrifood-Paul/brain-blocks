@@ -50,9 +50,9 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
 
-     state:{
+    state: {
       type: String,
-     },
+    },
 
     avatar: {
       type: String,

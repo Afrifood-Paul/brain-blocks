@@ -16,7 +16,7 @@ const ludoMoveHistorySchema = new mongoose.Schema(
     to: { type: Number, default: null },
     metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("LudoMoveHistory", ludoMoveHistorySchema);

@@ -2,13 +2,8 @@ import { useEffect, type ReactNode } from "react";
 import { createRouter, useRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import type { RouterContext } from "./router/context";
-import {
-  AuthProvider,
-  initialAuthContext,
-  useAuth,
-} from "./context/AuthContext";
+import { AuthProvider, initialAuthContext, useAuth } from "./context/AuthContext";
 import { WalletProvider } from "./context/WalletContext";
-
 
 function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();

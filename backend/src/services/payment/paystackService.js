@@ -29,12 +29,7 @@ const requestPaystack = async (path, options = {}) => {
   return data;
 };
 
-const initializePaystackPayment = async ({
-  email,
-  amount,
-  reference,
-  callbackUrl,
-}) => {
+const initializePaystackPayment = async ({ email, amount, reference, callbackUrl }) => {
   const data = await requestPaystack("/transaction/initialize", {
     method: "POST",
     body: JSON.stringify({
@@ -53,9 +48,7 @@ const initializePaystackPayment = async ({
 };
 
 const verifyPaystackPayment = async (reference) => {
-  const data = await requestPaystack(
-    `/transaction/verify/${encodeURIComponent(reference)}`
-  );
+  const data = await requestPaystack(`/transaction/verify/${encodeURIComponent(reference)}`);
 
   return {
     success: data.data.status === "success",

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { apiClient } from "../services/api";
 
-type User = {
+export type User = {
   id: string;
   name: string;
   email: string;

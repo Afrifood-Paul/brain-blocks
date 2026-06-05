@@ -3,6 +3,7 @@
 Node.js + Express.js + MongoDB backend scaffold.
 
 ## Structure
+
 - `src/server.js` — entry point
 - `src/app.js` — Express app setup
 - `src/config/` — db & environment config
@@ -13,6 +14,7 @@ Node.js + Express.js + MongoDB backend scaffold.
 - `src/utils/` — helpers
 
 ## Setup
+
 ```bash
 cd backend
 npm install

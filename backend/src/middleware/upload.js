@@ -20,20 +20,13 @@ const storage = multer.diskStorage({
       "image/gif": ".gif",
     };
     const safeExt = extensionsByMime[file.mimetype] || "";
-    const uniqueName = `${Date.now()}-${Math.round(
-      Math.random() * 1e9
-    )}${safeExt}`;
+    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${safeExt}`;
 
     cb(null, uniqueName);
   },
 });
 
-const allowedTypes = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-]);
+const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
 const fileFilter = (_req, file, cb) => {
   if (!allowedTypes.has(file.mimetype)) {

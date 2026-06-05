@@ -3,6 +3,7 @@
 You are working on a full-stack real-time multiplayer chess application.
 
 ## Tech Stack
+
 - Frontend: React (Vite)
 - Backend: Node.js + Express
 - Realtime: Socket.IO
@@ -11,10 +12,12 @@ You are working on a full-stack real-time multiplayer chess application.
 ---
 
 ## CORE PRINCIPLE
+
 Backend + MongoDB is the ONLY source of truth.
 Frontend is only a renderer and event sender.
 
 Frontend must NEVER:
+
 - validate chess moves
 - decide turn logic
 - determine game outcome
@@ -23,6 +26,7 @@ Frontend must NEVER:
 ---
 
 ## ARCHITECTURE FLOW (STRICT)
+
 All game actions must follow this flow:
 
 Client → Socket event → Backend validation → MongoDB update → Socket broadcast → Frontend render
@@ -30,6 +34,7 @@ Client → Socket event → Backend validation → MongoDB update → Socket bro
 ---
 
 ## SOCKET EVENTS (DO NOT CHANGE)
+
 - join_game
 - game_state
 - make_move
@@ -40,7 +45,9 @@ Client → Socket event → Backend validation → MongoDB update → Socket bro
 ---
 
 ## GAME RULES (BACKEND RESPONSIBILITY ONLY)
+
 Backend must handle:
+
 - move validation
 - turn enforcement
 - check / checkmate detection
@@ -51,7 +58,9 @@ Backend must handle:
 ---
 
 ## DATABASE RULES
+
 Each game document must contain:
+
 - gameId
 - players (white/black)
 - boardState
@@ -65,17 +74,21 @@ All valid moves must be persisted immediately.
 ---
 
 ## RECONNECT RULE
+
 If a player disconnects:
+
 - game state must remain in MongoDB
 - game must NOT reset
 
 On reconnect:
+
 - backend restores full game state
 - frontend requests latest `game_state`
 
 ---
 
 ## SOCKET RULES
+
 - No duplicate socket connections per user
 - No multiple rooms per gameId
 - No direct frontend state authority
@@ -84,6 +97,7 @@ On reconnect:
 ---
 
 ## SAFETY RULE FOR AGENTS
+
 - Do NOT rewrite the project structure
 - Do NOT rename socket events
 - Do NOT remove existing features
@@ -93,8 +107,10 @@ On reconnect:
 ---
 
 ## OUTPUT RULE
+
 When modifying code:
 Return only:
+
 - code fixes
 - improved socket handlers
 - backend logic improvements

@@ -9,5 +9,5 @@ export const Route = createFileRoute("/fundwallet")({
     <ProtectedRoute>
       <Fundwallet />
     </ProtectedRoute>
-),
+  ),
 });

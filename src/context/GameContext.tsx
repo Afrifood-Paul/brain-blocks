@@ -12,19 +12,53 @@ import { connectSocket, socket } from "../services/socket";
 
 type PlayerColor = "w" | "b";
 
+type ChessPlayer = {
+  name?: string;
+  username?: string;
+  avatar?: string | null;
+};
+
+type ChessPlayers = {
+  white?: ChessPlayer | null;
+  black?: ChessPlayer | null;
+};
+
+type ChessMove = {
+  from: string;
+  to: string;
+  promotion?: string;
+};
+
+type MoveHistoryItem = Record<string, unknown>;
+
+type ServerGameState = {
+  error?: unknown;
+  boardState?: string;
+  fen?: string;
+  currentTurn?: PlayerColor;
+  players?: ChessPlayers | null;
+  playerColor?: PlayerColor | null;
+  status?: string;
+  winnerColor?: PlayerColor | null;
+  winner?: ChessPlayer | null;
+  moveHistory?: MoveHistoryItem[];
+  sharedTime?: number;
+  timerStartedAt?: string | null;
+};
+
 type GameContextType = {
   game: Chess;
   turn: string;
-  players: any;
+  players: ChessPlayers | null;
   playerColor: PlayerColor | null;
   status: string;
   winnerColor: PlayerColor | null;
-  winner: any;
-  moveHistory: any[];
+  winner: ChessPlayer | null;
+  moveHistory: MoveHistoryItem[];
   sharedTime: number;
   timerStartedAt: string | null;
   joinGame: (id: string) => void;
-  makeMove: (move: any) => boolean;
+  makeMove: (move: ChessMove) => boolean;
 };
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -36,12 +70,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const playerColorRef = useRef<PlayerColor | null>(null);
   const statusRef = useRef("active");
   const currentFenRef = useRef(game.fen());
-  const [players, setPlayers] = useState<any>(null);
+  const [players, setPlayers] = useState<ChessPlayers | null>(null);
   const [playerColor, setPlayerColor] = useState<PlayerColor | null>(null);
   const [status, setStatus] = useState("active");
   const [winnerColor, setWinnerColor] = useState<PlayerColor | null>(null);
-  const [winner, setWinner] = useState<any>(null);
-  const [moveHistory, setMoveHistory] = useState<any[]>([]);
+  const [winner, setWinner] = useState<ChessPlayer | null>(null);
+  const [moveHistory, setMoveHistory] = useState<MoveHistoryItem[]>([]);
   const [turn, setTurn] = useState("w");
   const [sharedTime, setSharedTime] = useState(600);
   const [timerStartedAt, setTimerStartedAt] = useState<string | null>(null);
@@ -57,11 +91,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     connectSocket();
 
-    const applyServerState = (data: any) => {
+    const applyServerState = (data: ServerGameState) => {
       if (!data || data.error) return;
 
-      if (data.boardState || data.fen) {
-        const nextFen = data.boardState || data.fen;
+      const nextFen = data.boardState || data.fen;
+
+      if (nextFen) {
         const nextGame = new Chess(nextFen);
 
         if (nextFen !== currentFenRef.current) {
@@ -104,12 +139,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     socket.emit("join_game", { gameId: id });
   }, []);
 
-  const makeMove = useCallback((move: any) => {
-    if (
-      !gameIdRef.current ||
-      statusRef.current !== "active" ||
-      !socket.connected
-    ) {
+  const makeMove = useCallback((move: ChessMove) => {
+    if (!gameIdRef.current || statusRef.current !== "active" || !socket.connected) {
       return false;
     }
 

@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AuthTabs } from "@/components/AuthTabs";
 import { CheckCircle2 } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useAuth } from "@/context/AuthContext";
 import { consumeAuthRedirect } from "@/services/authRedirect";
 import { nigeriaStates } from "@/constants/nigeriaStates";
+import { toast } from "react-toastify";
 
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
@@ -14,8 +15,9 @@ const Register = () => {
   const { register } = useAuth();
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+ 
   const [avatar, setAvatar] = useState<File | null>(null);
+
 
   const [form, setForm] = useState({
     firstName: "",
@@ -30,66 +32,79 @@ const Register = () => {
     referralCode: "",
   });
 
+//   const search = useSearch({ from: "/register" });
+
+// useEffect(() => {
+//   if (search.ref && !form.referralCode) {
+//     setForm((prev) => ({
+//       ...prev,
+//       referralCode: search.ref,
+//     }));
+
+//     toast.success("Referral code applied 🎁");
+//   }
+// }, [search.ref]);
+
   const updateField = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
   // ✅ ONLY LOGIC ADDED HERE
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  e.preventDefault();
 
-    const {
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    verifyPassword,
+    username,
+    dob,
+    phone,
+    state,
+    referralCode,
+  } = form;
+
+  // validation
+  if (!email || !password || !firstName || !lastName || !username || !dob || !phone || !state) {
+    toast.error("Please fill required fields");
+    return;
+  }
+
+  if (password !== verifyPassword) {
+    toast.error("Passwords do not match");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    await register({
       firstName,
       lastName,
+      username,
       email,
       password,
-      verifyPassword,
-      username,
       dob,
       phone,
       state,
       referralCode,
-    } = form;
+      avatar,
+    });
 
-    // validation
-    if (!email || !password || !firstName || !lastName || !username || !dob || !phone || !state) {
-      setError("Please fill required fields");
-      return;
-    }
+    toast.success("Account created successfully 🎉");
 
-
-
-    if (password !== verifyPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-
-    try {
-      setLoading(true);
-
-
-      await register({
-        firstName,
-        lastName,
-        username,
-        email,
-        password,
-        dob,
-        phone,
-        state,
-        referralCode,
-        avatar,
-      });
-
-      navigate({ to: consumeAuthRedirect() || "/dashboard", replace: true });
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, "Registration failed"));
-    } finally {
-      setLoading(false);
-    }
-  };
+    navigate({
+      to: consumeAuthRedirect() || "/dashboard",
+      replace: true,
+    });
+  } catch (err: unknown) {
+    toast.error(getErrorMessage(err, "Registration failed"));
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-background px-4 py-5 text-foreground">
@@ -151,7 +166,7 @@ const Register = () => {
               required
               onChange={(v) => updateField("username", v)}
             />
-           
+
             <InputField
               placeholder="Date of Birth"
               type="date"
@@ -212,8 +227,6 @@ const Register = () => {
             className="block w-full cursor-pointer rounded-full bg-white text-sm text-black file:mr-4 file:h-12 file:border-0 file:bg-blue-600 file:px-5 file:text-sm file:font-semibold file:text-white"
           />
 
-          {/* Error (ONLY ADDITION TO UI) */}
-          {error && <p className="text-sm text-red-400 font-medium">{error}</p>}
 
           {/* Register Button */}
           <button
@@ -238,7 +251,7 @@ type InputProps = {
   required?: boolean;
 };
 
-function InputField({ placeholder, value, onChange, type = "text",  required = false, }: InputProps) {
+function InputField({ placeholder, value, onChange, type = "text", required = false }: InputProps) {
   return (
     <input
       type={type}

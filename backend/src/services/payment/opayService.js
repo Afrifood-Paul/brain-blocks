@@ -1,5 +1,4 @@
-const OPAY_BASE_URL =
-  process.env.OPAY_BASE_URL || "https://sandboxapi.opaycheckout.com";
+const OPAY_BASE_URL = process.env.OPAY_BASE_URL || "https://sandboxapi.opaycheckout.com";
 
 const getMerchantId = () => process.env.OPAY_MERCHANT_ID;
 const getPrivateKey = () => process.env.OPAY_PRIVATE_KEY;
@@ -32,12 +31,7 @@ const requestOpay = async (path, options = {}) => {
   return data;
 };
 
-const initializeOpayPayment = async ({
-  email,
-  amount,
-  reference,
-  callbackUrl,
-}) => {
+const initializeOpayPayment = async ({ email, amount, reference, callbackUrl }) => {
   const data = await requestOpay("/api/v1/international/cashier/create", {
     method: "POST",
     body: JSON.stringify({
@@ -63,8 +57,7 @@ const initializeOpayPayment = async ({
   const payload = data.data || data;
 
   return {
-    authorizationUrl:
-      payload.cashierUrl || payload.paymentUrl || payload.authorizationUrl,
+    authorizationUrl: payload.cashierUrl || payload.paymentUrl || payload.authorizationUrl,
     providerReference: payload.reference || payload.orderNo || reference,
     raw: payload,
   };
@@ -82,8 +75,7 @@ const verifyOpayPayment = async (reference) => {
 
   const payload = data.data || data;
   const status = String(payload.status || payload.orderStatus || "").toLowerCase();
-  const paidAmount =
-    payload.amount?.total ?? payload.amount ?? payload.totalAmount ?? 0;
+  const paidAmount = payload.amount?.total ?? payload.amount ?? payload.totalAmount ?? 0;
 
   return {
     success: ["success", "successful", "paid", "completed"].includes(status),

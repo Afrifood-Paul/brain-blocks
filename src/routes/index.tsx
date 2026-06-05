@@ -1,8 +1,14 @@
-// import { Link, createFileRoute } from "@tanstack/react-router";
+import Home from "@/pages/home/Home";
+import { createFileRoute } from "@tanstack/react-router";
 
-// export const Route = createFileRoute("/")({
-//   component: Home,
-// });
+export const Route = createFileRoute("/")({
+  component: Home,
+});
+
+
+
+
+
 
 // function Home() {
 //   return (
@@ -51,41 +57,9 @@
 //   );
 // }
 
+// import { createFileRoute } from "@tanstack/react-router";
 
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+// export const Route = createFileRoute("/")({
+//   component: () => import("../pages/home/Home").then((m) => m.default),
+// });
 
-export const Route = createFileRoute("/")({
-  component: Home,
-});
-
-function Home() {
-  const [activeNav, setActiveNav] = useState("Home");
-  const [cartCount, setCartCount] = useState(0);
-
-  return (
-    <div
-      style={{
-        fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
-        background: "#f0f4ff",
-        color: "#1a1a2e",
-        minHeight: "100vh",
-      }}
-    >
-      {/* Paste ALL your JSX here */}
-
-      {/* Example */}
-      <nav>
-        {/* navbar */}
-      </nav>
-
-      <section>
-        {/* hero */}
-      </section>
-
-      <footer>
-        {/* footer */}
-      </footer>
-    </div>
-  );
-}

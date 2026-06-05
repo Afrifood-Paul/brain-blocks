@@ -47,7 +47,9 @@ export const LudoDice = ({ value, rolling, disabled, onRoll }: LudoDiceProps) =>
   useEffect(() => {
     if (!rolling && value) {
       setFace(value);
-      window.dispatchEvent(new CustomEvent("ludo:dice-roll", { detail: { rolling: false, value } }));
+      window.dispatchEvent(
+        new CustomEvent("ludo:dice-roll", { detail: { rolling: false, value } }),
+      );
     }
   }, [rolling, value]);
 

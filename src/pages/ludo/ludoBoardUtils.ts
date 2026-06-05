@@ -168,6 +168,6 @@ export const getTrailProgress = (from: number, dice?: number | null) => {
   if (!dice) return [];
   const start = from < 0 ? 0 : from + 1;
   return Array.from({ length: from < 0 ? 1 : dice }, (_, index) => start + index).filter(
-    (progress) => progress <= 57
+    (progress) => progress <= 57,
   );
 };

@@ -33,15 +33,15 @@ exports.getPackages = async (req, res) => {
     await ensureDefaultPackages();
 
     const network = String(req.query.network || "").trim();
-    const type = String(req.query.type || "").trim().toLowerCase();
+    const type = String(req.query.type || "")
+      .trim()
+      .toLowerCase();
     const filter = { active: true };
 
     if (network) filter.network = network;
     if (type) filter.type = type;
 
-    const packages = await Package.find(filter)
-      .sort({ network: 1, type: 1, priceCoins: 1 })
-      .lean();
+    const packages = await Package.find(filter).sort({ network: 1, type: 1, priceCoins: 1 }).lean();
 
     res.json({ packages });
   } catch (err) {

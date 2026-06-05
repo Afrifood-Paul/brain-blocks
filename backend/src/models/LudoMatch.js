@@ -13,7 +13,7 @@ const matchPlayerSchema = new mongoose.Schema(
     },
     payout: { type: Number, default: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const ludoMatchSchema = new mongoose.Schema(
@@ -34,7 +34,7 @@ const ludoMatchSchema = new mongoose.Schema(
     startedAt: { type: Date, default: Date.now },
     finishedAt: { type: Date, default: null },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("LudoMatch", ludoMatchSchema);

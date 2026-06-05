@@ -35,7 +35,7 @@ const packageSchema = new mongoose.Schema(
       index: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 packageSchema.index({ network: 1, type: 1, name: 1 }, { unique: true });

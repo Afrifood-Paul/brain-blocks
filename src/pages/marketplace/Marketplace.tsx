@@ -12,7 +12,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { formatCoins, useWallet } from "@/context/WalletContext";
 import { apiClient } from "@/services/api";
-import headsetImg from "../../assets/headset.jpg"
+import headsetImg from "../../assets/headset.jpg";
 
 type VtuNetwork = "MTN" | "Airtel" | "Glo" | "9mobile";
 type PackageType = "airtime" | "data";

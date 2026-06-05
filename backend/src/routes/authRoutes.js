@@ -16,7 +16,6 @@ const handleAvatarUpload = (req, res, next) => {
 router.post("/register", handleAvatarUpload, register);
 router.post("/login", login);
 
-
 router.get("/me", requireAuth, async (req, res) => {
   try {
     res.status(200).json({

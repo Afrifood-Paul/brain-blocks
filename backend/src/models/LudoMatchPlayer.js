@@ -14,7 +14,7 @@ const ludoMatchPlayerSchema = new mongoose.Schema(
       default: "pending",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 ludoMatchPlayerSchema.index({ roomId: 1, userId: 1 }, { unique: true });

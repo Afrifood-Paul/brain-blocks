@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { apiClient } from "@/services/api";
 import { useWallet } from "@/context/WalletContext";
+import { toast } from "react-toastify";
 
 function CreateChallengePage() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ function CreateChallengePage() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdGame, setCreatedGame] = useState<{
-    gameId: string;
+    gameId?: string;
     inviteLink: string;
   } | null>(null);
 
@@ -73,10 +74,20 @@ function CreateChallengePage() {
     }
   };
 
-  const copyInviteLink = async () => {
-    if (!fullInviteLink) return;
+  // const copyInviteLink = async () => {
+  //   if (!fullInviteLink) return;
+  //   await navigator.clipboard.writeText(fullInviteLink);
+  // };
+const copyInviteLink = async () => {
+  console.log("FULL LINK:", fullInviteLink);
+
+  try {
     await navigator.clipboard.writeText(fullInviteLink);
-  };
+    toast("Copied!");
+  } catch (err) {
+    toast("Failed to copy link");
+  }
+};
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-background px-4 py-5 text-foreground">

@@ -10,7 +10,7 @@ import {
   Share2,
   ShoppingBag,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import iconPuzzle from "@/assets/puzzleIcon.png";
 import iconLudo from "@/assets/ludoIcon.png";
 import iconChess from "@/assets/chessIcon.png";
@@ -19,6 +19,8 @@ import { useAuth } from "@/context/AuthContext";
 import { formatCoins, useWallet } from "@/context/WalletContext";
 import { apiClient } from "@/services/api";
 import { useNavigate } from "@tanstack/react-router";
+import { copyToClipboard } from "@/utils/copyToClipboard";
+
 
 type VtuNetwork = "MTN" | "Airtel" | "Glo" | "9mobile";
 type PackageType = "airtime" | "data";
@@ -179,11 +181,17 @@ const Dashboard = () => {
     navigate({ to: "/login" });
   };
 
-  const handleCopyReferral = async () => {
-    if (!referralCode) return;
-    await navigator.clipboard.writeText(referralCode);
-    toast.success("Referral code copied");
-  };
+ const handleCopyReferral = async () => {
+  if (!referralCode) {
+    toast.error("No referral code available");
+    return;
+  }
+
+  const referralLink = `${window.location.origin}/register?ref=${referralCode}`;
+
+  await copyToClipboard(referralLink);
+  toast.success("Referral link copied 🎉");
+};
 
   const handleShareReferral = async () => {
     if (!referralCode) return;
