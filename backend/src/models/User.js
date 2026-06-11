@@ -60,7 +60,7 @@ const userSchema = new mongoose.Schema(
     },
 
     wallet: {
-      inactiveCoins: { type: Number, default: 5000, min: 0 },
+      inactiveCoins: { type: Number, default: 2000, min: 0 },
       activeCoins: { type: Number, default: 0, min: 0 },
       coins: { type: Number, default: 0 },
       balance: { type: Number },
@@ -84,6 +84,17 @@ const userSchema = new mongoose.Schema(
     referralRewarded: {
       type: Boolean,
       default: false,
+    },
+
+    isOnline: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    lastActive: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true },

@@ -33,6 +33,7 @@ type WalletContextType = {
 };
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
+const DEFAULT_BONUS_COINS = 2000;
 
 export const formatCoins = (amount: number) =>
   `${new Intl.NumberFormat("en-NG", {
@@ -58,7 +59,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       nextWallet.activeCoins ?? nextWallet.coins ?? nextWallet.balance ?? 0,
     );
     setCoins(nextActiveCoins);
-    setInactiveCoins(Number(nextWallet.inactiveCoins ?? 0));
+    setInactiveCoins(Number(nextWallet.inactiveCoins ?? DEFAULT_BONUS_COINS));
     return nextActiveCoins;
   }, []);
 

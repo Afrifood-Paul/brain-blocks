@@ -66,6 +66,41 @@ type ReferralSummary = {
   totalReferralCoinsEarned: number;
 };
 
+export type InviteStatus = "pending" | "accepted" | "declined";
+
+export type Invite = {
+  _id: string;
+  gameId: string;
+  gameName: string;
+  amount: number;
+  inviterId: string;
+  invitedUserId?: string;
+  invitedUsername: string;
+  status: InviteStatus;
+  inviteLink: string;
+  createdAt: string;
+};
+
+export type AppNotification = {
+  _id: string;
+  userId: string;
+  type: "invite";
+  title: string;
+  message: string;
+  inviteId?: string;
+  read: boolean;
+  createdAt: string;
+  invite?: Invite;
+};
+
+export type OnlineUser = {
+  _id: string;
+  username: string;
+  email: string;
+  isOnline: boolean;
+  lastActive?: string;
+};
+
 type GameCreationResponse = WalletResponse & {
   gameId?: string;
   roomId?: string;
@@ -118,8 +153,13 @@ class ApiClient {
   private token: string | null = canUseLocalStorage()
     ? window.localStorage.getItem(TOKEN_KEY)
     : null;
+  private sessionCache = new Map<string, Promise<unknown>>();
 
   setToken(token: string | null) {
+    if (this.token !== token) {
+      this.sessionCache.clear();
+    }
+
     this.token = token;
 
     if (!canUseLocalStorage()) return;
@@ -133,6 +173,39 @@ class ApiClient {
 
   getToken() {
     return this.token;
+  }
+
+  private clearCache(prefix?: string) {
+    if (!prefix) {
+      this.sessionCache.clear();
+      return;
+    }
+
+    Array.from(this.sessionCache.keys()).forEach((key) => {
+      if (key.startsWith(prefix)) {
+        this.sessionCache.delete(key);
+      }
+    });
+  }
+
+  private cachedRequest<TResponse>(endpoint: string, force = false) {
+    const cacheKey = `${this.token || "public"}:${endpoint}`;
+
+    if (force) {
+      this.sessionCache.delete(cacheKey);
+    }
+
+    if (!this.sessionCache.has(cacheKey)) {
+      this.sessionCache.set(
+        cacheKey,
+        this.request<TResponse>(endpoint).catch((error) => {
+          this.sessionCache.delete(cacheKey);
+          throw error;
+        }),
+      );
+    }
+
+    return this.sessionCache.get(cacheKey) as Promise<TResponse>;
   }
 
   async request<TResponse = unknown>(
@@ -265,15 +338,15 @@ class ApiClient {
   }
 
   async getWalletBalance() {
-    return this.request<WalletResponse>("/wallet/balance");
+    return this.cachedRequest<WalletResponse>("/wallet/balance");
   }
 
-  async getWalletTransactions() {
-    return this.request<{ transactions: CoinTransaction[] }>("/wallet/transactions");
+  async getWalletTransactions(force = false) {
+    return this.cachedRequest<{ transactions: CoinTransaction[] }>("/wallet/transactions", force);
   }
 
-  async getReferralSummary() {
-    return this.request<ReferralSummary>("/wallet/referrals");
+  async getReferralSummary(force = false) {
+    return this.cachedRequest<ReferralSummary>("/wallet/referrals", force);
   }
 
   async initializeWalletFunding(data: { provider: Provider; amount: number; callbackUrl: string }) {
@@ -284,33 +357,39 @@ class ApiClient {
   }
 
   async verifyWalletFunding(data: { provider: Provider; reference: string }) {
-    return this.request<WalletResponse>("/wallet/verify", {
+    const res = await this.request<WalletResponse>("/wallet/verify", {
       method: "POST",
       body: JSON.stringify(data),
     });
+    this.clearCache(`${this.token || "public"}:/wallet`);
+    return res;
   }
 
   async transferCoins(data: { recipient: string; amount: number }) {
-    return this.request<WalletResponse>("/wallet/transfer", {
+    const res = await this.request<WalletResponse>("/wallet/transfer", {
       method: "POST",
       body: JSON.stringify(data),
     });
+    this.clearCache(`${this.token || "public"}:/wallet`);
+    return res;
   }
 
-  async getPackages(params: { network?: string; type?: string } = {}) {
+  async getPackages(params: { network?: string; type?: string } = {}, force = false) {
     const query = new URLSearchParams();
     if (params.network) query.set("network", params.network);
     if (params.type) query.set("type", params.type);
 
     const suffix = query.toString() ? `?${query.toString()}` : "";
-    return this.request<{ packages: VtuPackage[] }>(`/packages${suffix}`);
+    return this.cachedRequest<{ packages: VtuPackage[] }>(`/packages${suffix}`, force);
   }
 
   async purchasePackage(packageId: string, userId?: string, phoneNumber?: string) {
-    return this.request<WalletResponse>("/purchase", {
+    const res = await this.request<WalletResponse>("/purchase", {
       method: "POST",
       body: JSON.stringify({ packageId, userId, phoneNumber }),
     });
+    this.clearCache(`${this.token || "public"}:/wallet`);
+    return res;
   }
 
   async getMarketplaceProducts(params: { category?: string; search?: string } = {}) {
@@ -333,13 +412,94 @@ class ApiClient {
   }
 
   async purchaseMarketplaceProduct(productId: string, deliveryNote?: string) {
-    return this.request<WalletResponse>("/marketplace/purchase", {
+    const res = await this.request<WalletResponse>("/marketplace/purchase", {
       method: "POST",
       body: JSON.stringify({ productId, deliveryNote }),
     });
+    this.clearCache(`${this.token || "public"}:/wallet`);
+    return res;
+  }
+
+  async createInvite(data: {
+    gameId: string;
+    gameName: string;
+    amount: number;
+    invitedUsername: string;
+  }) {
+    const res = await this.request<{ invite: Invite }>("/invites", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    this.clearCache(`${this.token || "public"}:/invites`);
+    this.clearCache(`${this.token || "public"}:/notifications`);
+    return res;
+  }
+
+  async getInvites(userId: string, force = false) {
+    return this.cachedRequest<{ invites: Invite[] }>(`/invites/${userId}`, force);
+  }
+
+  async acceptInvite(inviteId: string) {
+    const res = await this.request<{ invite: Invite }>(`/invites/${inviteId}/accept`, {
+      method: "PATCH",
+    });
+    this.clearCache(`${this.token || "public"}:/invites`);
+    this.clearCache(`${this.token || "public"}:/notifications`);
+    return res;
+  }
+
+  async declineInvite(inviteId: string) {
+    const res = await this.request<{ invite: Invite }>(`/invites/${inviteId}/decline`, {
+      method: "PATCH",
+    });
+    this.clearCache(`${this.token || "public"}:/invites`);
+    this.clearCache(`${this.token || "public"}:/notifications`);
+    return res;
+  }
+
+  async getNotifications(userId: string, force = false) {
+    return this.cachedRequest<{ notifications: AppNotification[] }>(
+      `/notifications/${userId}`,
+      force,
+    );
+  }
+
+  async markNotificationRead(notificationId: string) {
+    const res = await this.request<{ notification: AppNotification }>(
+      `/notifications/${notificationId}/read`,
+      {
+        method: "PATCH",
+      },
+    );
+    this.clearCache(`${this.token || "public"}:/notifications`);
+    return res;
+  }
+
+  async getOnlineUsers(force = false) {
+    return this.cachedRequest<{ users: OnlineUser[] }>("/users/online", force);
+  }
+
+  async updatePresence(isOnline: boolean) {
+    return this.request<{ user: OnlineUser }>("/users/presence", {
+      method: "POST",
+      body: JSON.stringify({ isOnline }),
+    });
+  }
+
+  sendPresenceBeacon(isOnline: boolean) {
+    if (typeof navigator === "undefined" || !navigator.sendBeacon || !this.token) {
+      return false;
+    }
+
+    const body = new Blob([JSON.stringify({ isOnline, token: this.token })], {
+      type: "application/json",
+    });
+
+    return navigator.sendBeacon(`${API_BASE_URL}/users/presence/beacon`, body);
   }
 
   logout() {
+    this.sendPresenceBeacon(false);
     this.setToken(null);
   }
 }

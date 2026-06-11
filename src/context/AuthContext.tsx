@@ -2,8 +2,10 @@ import { createContext, useContext, useEffect, useMemo, useState, ReactNode } fr
 import { apiClient } from "../services/api";
 
 export type User = {
+  _id?: string;
   id: string;
-  name: string;
+  firstName: string;
+  username?: string;
   email: string;
   avatar?: string | null;
   referralCode?: string;
@@ -55,6 +57,7 @@ export const initialAuthContext: AuthContextType = {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const userId = user?._id || user?.id;
 
   // restore session on refresh
   useEffect(() => {
@@ -85,6 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const res = await apiClient.login(email, password);
       setUser(res.user);
+      apiClient.updatePresence(true).catch(() => {});
     } finally {
       setLoading(false);
     }
@@ -96,15 +100,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const res = await apiClient.register(data);
       setUser(res.user);
+      apiClient.updatePresence(true).catch(() => {});
     } finally {
       setLoading(false);
     }
   };
 
   const logout = () => {
+    apiClient.sendPresenceBeacon(false);
+    apiClient.updatePresence(false).catch(() => {});
     apiClient.logout();
     setUser(null);
   };
+
+  useEffect(() => {
+    if (!userId) return;
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+
+    apiClient.updatePresence(true).catch(() => {});
+
+    const handlePageHide = () => {
+      apiClient.sendPresenceBeacon(false);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        apiClient.sendPresenceBeacon(false);
+        return;
+      }
+
+      apiClient.updatePresence(true).catch(() => {});
+    };
+
+    const heartbeat = window.setInterval(() => {
+      apiClient.updatePresence(true).catch(() => {});
+    }, 60000);
+
+    window.addEventListener("pagehide", handlePageHide);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(heartbeat);
+      window.removeEventListener("pagehide", handlePageHide);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [userId]);
 
   const value = useMemo(
     () => ({

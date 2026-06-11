@@ -18,6 +18,9 @@ app.use("/api/ludo", require("./routes/ludoRoutes"));
 app.use("/api/marketplace", require("./routes/marketplaceRoutes"));
 app.use("/api/packages", require("./routes/packageRoutes"));
 app.use("/api/purchase", require("./routes/purchaseRoutes"));
+app.use("/api/invites", require("./routes/inviteRoutes"));
+app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/users", require("./routes/presenceRoutes"));
 
 app.use((req, res) => {
   res.status(404).json({ msg: "Route not found", message: "Route not found" });

@@ -16,6 +16,7 @@ import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LudoRouteImport } from './routes/ludo'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinchallengeRouteImport } from './routes/joinchallenge'
+import { Route as GameLobbyRouteImport } from './routes/game-lobby'
 import { Route as FundwalletRouteImport } from './routes/fundwallet'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CreatechallengeRouteImport } from './routes/createchallenge'
@@ -58,6 +59,11 @@ const JoinchallengeRoute = JoinchallengeRouteImport.update({
   path: '/joinchallenge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GameLobbyRoute = GameLobbyRouteImport.update({
+  id: '/game-lobby',
+  path: '/game-lobby',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FundwalletRoute = FundwalletRouteImport.update({
   id: '/fundwallet',
   path: '/fundwallet',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/createchallenge': typeof CreatechallengeRoute
   '/dashboard': typeof DashboardRoute
   '/fundwallet': typeof FundwalletRoute
+  '/game-lobby': typeof GameLobbyRoute
   '/joinchallenge': typeof JoinchallengeRoute
   '/login': typeof LoginRoute
   '/ludo': typeof LudoRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/createchallenge': typeof CreatechallengeRoute
   '/dashboard': typeof DashboardRoute
   '/fundwallet': typeof FundwalletRoute
+  '/game-lobby': typeof GameLobbyRoute
   '/joinchallenge': typeof JoinchallengeRoute
   '/login': typeof LoginRoute
   '/ludo': typeof LudoRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/createchallenge': typeof CreatechallengeRoute
   '/dashboard': typeof DashboardRoute
   '/fundwallet': typeof FundwalletRoute
+  '/game-lobby': typeof GameLobbyRoute
   '/joinchallenge': typeof JoinchallengeRoute
   '/login': typeof LoginRoute
   '/ludo': typeof LudoRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/createchallenge'
     | '/dashboard'
     | '/fundwallet'
+    | '/game-lobby'
     | '/joinchallenge'
     | '/login'
     | '/ludo'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/createchallenge'
     | '/dashboard'
     | '/fundwallet'
+    | '/game-lobby'
     | '/joinchallenge'
     | '/login'
     | '/ludo'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/createchallenge'
     | '/dashboard'
     | '/fundwallet'
+    | '/game-lobby'
     | '/joinchallenge'
     | '/login'
     | '/ludo'
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   CreatechallengeRoute: typeof CreatechallengeRoute
   DashboardRoute: typeof DashboardRoute
   FundwalletRoute: typeof FundwalletRoute
+  GameLobbyRoute: typeof GameLobbyRoute
   JoinchallengeRoute: typeof JoinchallengeRoute
   LoginRoute: typeof LoginRoute
   LudoRoute: typeof LudoRoute
@@ -250,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinchallengeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/game-lobby': {
+      id: '/game-lobby'
+      path: '/game-lobby'
+      fullPath: '/game-lobby'
+      preLoaderRoute: typeof GameLobbyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fundwallet': {
       id: '/fundwallet'
       path: '/fundwallet'
@@ -302,6 +322,7 @@ const rootRouteChildren: RootRouteChildren = {
   CreatechallengeRoute: CreatechallengeRoute,
   DashboardRoute: DashboardRoute,
   FundwalletRoute: FundwalletRoute,
+  GameLobbyRoute: GameLobbyRoute,
   JoinchallengeRoute: JoinchallengeRoute,
   LoginRoute: LoginRoute,
   LudoRoute: LudoRoute,

@@ -3,7 +3,7 @@ const Transaction = require("../models/Transaction");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const SIGNUP_BONUS_COINS = 5000;
+const SIGNUP_BONUS_COINS = 2000;
 const REFERRAL_BONUS_COINS = 100;
 
 const buildReferralPrefix = (firstName, username) => {
