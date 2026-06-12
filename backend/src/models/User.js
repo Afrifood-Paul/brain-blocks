@@ -96,6 +96,13 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    currentGameId: {
+      type: String,
+      default: null,
+      index: true,
+      trim: true,
+    },
   },
   { timestamps: true },
 );

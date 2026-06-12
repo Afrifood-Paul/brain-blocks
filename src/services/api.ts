@@ -66,10 +66,19 @@ type ReferralSummary = {
   totalReferralCoinsEarned: number;
 };
 
-export type InviteStatus = "pending" | "accepted" | "declined";
+export type SessionStatus = "pending" | "accepted" | "active" | "completed" | "declined";
+export type InviteStatus = SessionStatus;
+
+export type PaginationMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
 
 export type Invite = {
   _id: string;
+  sessionId?: string;
   gameId: string;
   gameName: string;
   amount: number;
@@ -79,6 +88,25 @@ export type Invite = {
   status: InviteStatus;
   inviteLink: string;
   createdAt: string;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  inviter?: SessionPlayer;
+  invitedUser?: SessionPlayer;
+  players?: SessionPlayer[];
+};
+
+export type SessionPlayer = {
+  _id: string;
+  username: string;
+  email?: string;
+  avatar?: string;
+  isOnline?: boolean;
+  lastActive?: string;
+};
+
+export type Session = Invite & {
+  sessionId: string;
+  players: SessionPlayer[];
 };
 
 export type AppNotification = {
@@ -99,6 +127,7 @@ export type OnlineUser = {
   email: string;
   isOnline: boolean;
   lastActive?: string;
+  currentGameId?: string | null;
 };
 
 type GameCreationResponse = WalletResponse & {
@@ -439,20 +468,72 @@ class ApiClient {
     return this.cachedRequest<{ invites: Invite[] }>(`/invites/${userId}`, force);
   }
 
-  async acceptInvite(inviteId: string) {
-    const res = await this.request<{ invite: Invite }>(`/invites/${inviteId}/accept`, {
+  async getSessions(
+    params: { status?: SessionStatus | ""; gameId?: string; page?: number; limit?: number } = {},
+    force = false,
+  ) {
+    const query = new URLSearchParams();
+    if (params.status) query.set("status", params.status);
+    if (params.gameId) query.set("gameId", params.gameId);
+    if (params.page) query.set("page", String(params.page));
+    if (params.limit) query.set("limit", String(params.limit));
+
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return this.cachedRequest<{ sessions: Session[]; pagination: PaginationMeta }>(
+      `/sessions${suffix}`,
+      force,
+    );
+  }
+
+  async getSession(sessionId: string, force = false) {
+    return this.cachedRequest<{ session: Session }>(`/sessions/${sessionId}`, force);
+  }
+
+  async startSession(sessionId: string) {
+    const res = await this.request<{ session: Session }>(`/sessions/${sessionId}/start`, {
       method: "PATCH",
     });
+    this.clearCache(`${this.token || "public"}:/sessions`);
     this.clearCache(`${this.token || "public"}:/invites`);
     this.clearCache(`${this.token || "public"}:/notifications`);
     return res;
   }
 
-  async declineInvite(inviteId: string) {
-    const res = await this.request<{ invite: Invite }>(`/invites/${inviteId}/decline`, {
-      method: "PATCH",
-    });
+  async deleteSession(sessionId: string) {
+    const res = await this.request<{ success: boolean; sessionId: string }>(
+      `/sessions/${sessionId}`,
+      {
+        method: "DELETE",
+      },
+    );
+    this.clearCache(`${this.token || "public"}:/sessions`);
     this.clearCache(`${this.token || "public"}:/invites`);
+    this.clearCache(`${this.token || "public"}:/notifications`);
+    return res;
+  }
+
+  async acceptInvite(inviteId: string) {
+    const res = await this.request<{ invite: Invite; session?: Session }>(
+      `/invites/${inviteId}/accept`,
+      {
+        method: "PATCH",
+      },
+    );
+    this.clearCache(`${this.token || "public"}:/invites`);
+    this.clearCache(`${this.token || "public"}:/sessions`);
+    this.clearCache(`${this.token || "public"}:/notifications`);
+    return res;
+  }
+
+  async declineInvite(inviteId: string) {
+    const res = await this.request<{ invite: Invite; session?: Session }>(
+      `/invites/${inviteId}/decline`,
+      {
+        method: "PATCH",
+      },
+    );
+    this.clearCache(`${this.token || "public"}:/invites`);
+    this.clearCache(`${this.token || "public"}:/sessions`);
     this.clearCache(`${this.token || "public"}:/notifications`);
     return res;
   }
@@ -475,14 +556,27 @@ class ApiClient {
     return res;
   }
 
-  async getOnlineUsers(force = false) {
-    return this.cachedRequest<{ users: OnlineUser[] }>("/users/online", force);
+  async getOnlineUsers(
+    params: { search?: string; gameId?: string; page?: number; limit?: number } = {},
+    force = false,
+  ) {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.gameId) query.set("gameId", params.gameId);
+    if (params.page) query.set("page", String(params.page));
+    if (params.limit) query.set("limit", String(params.limit));
+
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return this.cachedRequest<{ users: OnlineUser[]; pagination: PaginationMeta }>(
+      `/users/online${suffix}`,
+      force,
+    );
   }
 
-  async updatePresence(isOnline: boolean) {
+  async updatePresence(isOnline: boolean, currentGameId?: string | null) {
     return this.request<{ user: OnlineUser }>("/users/presence", {
       method: "POST",
-      body: JSON.stringify({ isOnline }),
+      body: JSON.stringify({ isOnline, currentGameId }),
     });
   }
 

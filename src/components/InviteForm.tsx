@@ -104,9 +104,9 @@ export default function InviteForm({ selectedGameId, onInviteCreated }: InviteFo
 
     try {
       await navigator.share(shareData);
-    } catch (err) {
+    } catch (err: unknown) {
       // User cancelled share → DO NOTHING
-      if ((err as any)?.name === "AbortError") return;
+      if (err instanceof DOMException && err.name === "AbortError") return;
 
       toast.error("Unable to share");
     }

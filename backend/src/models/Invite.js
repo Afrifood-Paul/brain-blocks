@@ -36,9 +36,17 @@ const inviteSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "accepted", "declined"],
+      enum: ["pending", "accepted", "active", "completed", "declined"],
       default: "pending",
       index: true,
+    },
+    startedAt: {
+      type: Date,
+      default: null,
+    },
+    completedAt: {
+      type: Date,
+      default: null,
     },
     inviteLink: {
       type: String,

@@ -24,7 +24,7 @@ export const GAMES: GameConfig[] = [
     bg: "from-[#AFD0F1] to-[#60A3F3]",
     icon: puzzleIcon,
   },
-  { id: "ludo", name: "Ludo", stake: 200, bg: "from-[#B5A9FF] to-[#846DFD]", icon: ludoIcon },
+  { id: "ludo", name: "Ludo", stake: 300, bg: "from-[#B5A9FF] to-[#846DFD]", icon: ludoIcon },
   { id: "chess", name: "Chess", stake: 200, bg: "from-[#98DC8F] to-[#5DC161]", icon: chessIcon },
   {
     id: "scrabble",

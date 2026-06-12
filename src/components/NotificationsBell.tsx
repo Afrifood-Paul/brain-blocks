@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Bell } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -11,6 +12,7 @@ type NotificationsBellProps = {
 export default function NotificationsBell({ userId }: NotificationsBellProps) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const navigate = useNavigate();
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.read).length,
     [notifications],
@@ -52,7 +54,16 @@ export default function NotificationsBell({ userId }: NotificationsBellProps) {
 
     try {
       if (action === "accept") {
-        await apiClient.acceptInvite(notification.inviteId);
+        const res = await apiClient.acceptInvite(notification.inviteId);
+        const sessionId =
+          res.session?.sessionId || res.session?._id || res.invite.sessionId || res.invite._id;
+
+        await markRead(notification._id);
+        await loadNotifications(true);
+        toast.success("Invite accepted");
+        navigate({ to: "/game-room/$sessionId", params: { sessionId } });
+        setOpen(false);
+        return;
       } else {
         await apiClient.declineInvite(notification.inviteId);
       }

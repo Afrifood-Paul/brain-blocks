@@ -5,6 +5,9 @@ import Chessboard from "@/pages/chessboard/Chessboard";
 import { GameProvider } from "@/context/GameContext";
 
 export const Route = createFileRoute("/chess")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    gameId: typeof search.gameId === "string" ? search.gameId : undefined,
+  }),
   beforeLoad: requireAuth,
   component: () => (
     <ProtectedRoute>

@@ -5,6 +5,7 @@ import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
 import defaultAvatar from "@/assets/chessIcon.png";
 import { API_ORIGIN } from "@/services/api";
+import { useNavigate } from "@tanstack/react-router";
 
 type ChessPlayer = {
   name?: string;
@@ -37,7 +38,7 @@ const Chessboard = () => {
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
-
+const navigate = useNavigate()
   const getPlayer = (color: "w" | "b"): ChessPlayer | null | undefined =>
     color === "w" ? players?.white : players?.black;
 
@@ -56,6 +57,12 @@ const Chessboard = () => {
     isActive: boolean,
   ) => (
     <div className="flex w-full max-w-md items-center justify-between gap-3 rounded-md px-0 py-3 sm:px-4">
+      <button
+        onClick={() => navigate({ to: "/marketplace" })}
+        className="flex items-center gap-2 rounded bg-[#0B2177] px-4 py-2 text-white text-xs font-semibold shadow-sm"
+      >
+        Home
+      </button>
       <div className="flex items-center gap-3">
         <div className="h-12 w-12 shrink-0 rounded-full bg-[#9FC8F6] border-4 border-[#008FF0] overflow-hidden sm:h-14 sm:w-14">
           <img
@@ -137,17 +144,6 @@ const Chessboard = () => {
         opponentColor === "w" ? "White" : "Black",
         turn === opponentColor,
       )}
-
-      {/* <div className=" flex justify-center items-center">
-  <Board
-    position={game.fen()}
-    onPieceDrop={onDrop}
-    boardOrientation={playerColor === "b" ? "black" : "white"}
-    boardWidth={boardSize}
-    customLightSquareStyle={{ backgroundColor: "#F1E4D1" }}
-    customDarkSquareStyle={{ backgroundColor: "#318B4A" }}
-  />
-</div> */}
 
       <div className="flex w-full justify-center">
         <div className="max-w-full overflow-hidden border-4 border-[#333333] sm:border-8">

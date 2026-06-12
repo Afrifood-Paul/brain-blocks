@@ -12,17 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WithdrawalRouteImport } from './routes/withdrawal'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PicturepuzzleRouteImport } from './routes/picturepuzzle'
+import { Route as MyGamesRouteImport } from './routes/my-games'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LudoRouteImport } from './routes/ludo'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as JoinchallengeRouteImport } from './routes/joinchallenge'
 import { Route as GameLobbyRouteImport } from './routes/game-lobby'
 import { Route as FundwalletRouteImport } from './routes/fundwallet'
 import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as CreatechallengeRouteImport } from './routes/createchallenge'
 import { Route as ChessboardRouteImport } from './routes/chessboard'
 import { Route as ChessRouteImport } from './routes/chess'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GameRoomSessionIdRouteImport } from './routes/game-room.$sessionId'
 
 const WithdrawalRoute = WithdrawalRouteImport.update({
   id: '/withdrawal',
@@ -37,6 +37,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const PicturepuzzleRoute = PicturepuzzleRouteImport.update({
   id: '/picturepuzzle',
   path: '/picturepuzzle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyGamesRoute = MyGamesRouteImport.update({
+  id: '/my-games',
+  path: '/my-games',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketplaceRoute = MarketplaceRouteImport.update({
@@ -54,11 +59,6 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const JoinchallengeRoute = JoinchallengeRouteImport.update({
-  id: '/joinchallenge',
-  path: '/joinchallenge',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const GameLobbyRoute = GameLobbyRouteImport.update({
   id: '/game-lobby',
   path: '/game-lobby',
@@ -72,11 +72,6 @@ const FundwalletRoute = FundwalletRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CreatechallengeRoute = CreatechallengeRouteImport.update({
-  id: '/createchallenge',
-  path: '/createchallenge',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChessboardRoute = ChessboardRouteImport.update({
@@ -94,55 +89,60 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GameRoomSessionIdRoute = GameRoomSessionIdRouteImport.update({
+  id: '/game-room/$sessionId',
+  path: '/game-room/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chess': typeof ChessRoute
   '/chessboard': typeof ChessboardRoute
-  '/createchallenge': typeof CreatechallengeRoute
   '/dashboard': typeof DashboardRoute
   '/fundwallet': typeof FundwalletRoute
   '/game-lobby': typeof GameLobbyRoute
-  '/joinchallenge': typeof JoinchallengeRoute
   '/login': typeof LoginRoute
   '/ludo': typeof LudoRoute
   '/marketplace': typeof MarketplaceRoute
+  '/my-games': typeof MyGamesRoute
   '/picturepuzzle': typeof PicturepuzzleRoute
   '/register': typeof RegisterRoute
   '/withdrawal': typeof WithdrawalRoute
+  '/game-room/$sessionId': typeof GameRoomSessionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chess': typeof ChessRoute
   '/chessboard': typeof ChessboardRoute
-  '/createchallenge': typeof CreatechallengeRoute
   '/dashboard': typeof DashboardRoute
   '/fundwallet': typeof FundwalletRoute
   '/game-lobby': typeof GameLobbyRoute
-  '/joinchallenge': typeof JoinchallengeRoute
   '/login': typeof LoginRoute
   '/ludo': typeof LudoRoute
   '/marketplace': typeof MarketplaceRoute
+  '/my-games': typeof MyGamesRoute
   '/picturepuzzle': typeof PicturepuzzleRoute
   '/register': typeof RegisterRoute
   '/withdrawal': typeof WithdrawalRoute
+  '/game-room/$sessionId': typeof GameRoomSessionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/chess': typeof ChessRoute
   '/chessboard': typeof ChessboardRoute
-  '/createchallenge': typeof CreatechallengeRoute
   '/dashboard': typeof DashboardRoute
   '/fundwallet': typeof FundwalletRoute
   '/game-lobby': typeof GameLobbyRoute
-  '/joinchallenge': typeof JoinchallengeRoute
   '/login': typeof LoginRoute
   '/ludo': typeof LudoRoute
   '/marketplace': typeof MarketplaceRoute
+  '/my-games': typeof MyGamesRoute
   '/picturepuzzle': typeof PicturepuzzleRoute
   '/register': typeof RegisterRoute
   '/withdrawal': typeof WithdrawalRoute
+  '/game-room/$sessionId': typeof GameRoomSessionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -150,66 +150,66 @@ export interface FileRouteTypes {
     | '/'
     | '/chess'
     | '/chessboard'
-    | '/createchallenge'
     | '/dashboard'
     | '/fundwallet'
     | '/game-lobby'
-    | '/joinchallenge'
     | '/login'
     | '/ludo'
     | '/marketplace'
+    | '/my-games'
     | '/picturepuzzle'
     | '/register'
     | '/withdrawal'
+    | '/game-room/$sessionId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/chess'
     | '/chessboard'
-    | '/createchallenge'
     | '/dashboard'
     | '/fundwallet'
     | '/game-lobby'
-    | '/joinchallenge'
     | '/login'
     | '/ludo'
     | '/marketplace'
+    | '/my-games'
     | '/picturepuzzle'
     | '/register'
     | '/withdrawal'
+    | '/game-room/$sessionId'
   id:
     | '__root__'
     | '/'
     | '/chess'
     | '/chessboard'
-    | '/createchallenge'
     | '/dashboard'
     | '/fundwallet'
     | '/game-lobby'
-    | '/joinchallenge'
     | '/login'
     | '/ludo'
     | '/marketplace'
+    | '/my-games'
     | '/picturepuzzle'
     | '/register'
     | '/withdrawal'
+    | '/game-room/$sessionId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChessRoute: typeof ChessRoute
   ChessboardRoute: typeof ChessboardRoute
-  CreatechallengeRoute: typeof CreatechallengeRoute
   DashboardRoute: typeof DashboardRoute
   FundwalletRoute: typeof FundwalletRoute
   GameLobbyRoute: typeof GameLobbyRoute
-  JoinchallengeRoute: typeof JoinchallengeRoute
   LoginRoute: typeof LoginRoute
   LudoRoute: typeof LudoRoute
   MarketplaceRoute: typeof MarketplaceRoute
+  MyGamesRoute: typeof MyGamesRoute
   PicturepuzzleRoute: typeof PicturepuzzleRoute
   RegisterRoute: typeof RegisterRoute
   WithdrawalRoute: typeof WithdrawalRoute
+  GameRoomSessionIdRoute: typeof GameRoomSessionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -235,6 +235,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PicturepuzzleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/my-games': {
+      id: '/my-games'
+      path: '/my-games'
+      fullPath: '/my-games'
+      preLoaderRoute: typeof MyGamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/marketplace': {
       id: '/marketplace'
       path: '/marketplace'
@@ -254,13 +261,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/joinchallenge': {
-      id: '/joinchallenge'
-      path: '/joinchallenge'
-      fullPath: '/joinchallenge'
-      preLoaderRoute: typeof JoinchallengeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/game-lobby': {
@@ -284,13 +284,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/createchallenge': {
-      id: '/createchallenge'
-      path: '/createchallenge'
-      fullPath: '/createchallenge'
-      preLoaderRoute: typeof CreatechallengeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/chessboard': {
       id: '/chessboard'
       path: '/chessboard'
@@ -312,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/game-room/$sessionId': {
+      id: '/game-room/$sessionId'
+      path: '/game-room/$sessionId'
+      fullPath: '/game-room/$sessionId'
+      preLoaderRoute: typeof GameRoomSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -319,17 +319,17 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChessRoute: ChessRoute,
   ChessboardRoute: ChessboardRoute,
-  CreatechallengeRoute: CreatechallengeRoute,
   DashboardRoute: DashboardRoute,
   FundwalletRoute: FundwalletRoute,
   GameLobbyRoute: GameLobbyRoute,
-  JoinchallengeRoute: JoinchallengeRoute,
   LoginRoute: LoginRoute,
   LudoRoute: LudoRoute,
   MarketplaceRoute: MarketplaceRoute,
+  MyGamesRoute: MyGamesRoute,
   PicturepuzzleRoute: PicturepuzzleRoute,
   RegisterRoute: RegisterRoute,
   WithdrawalRoute: WithdrawalRoute,
+  GameRoomSessionIdRoute: GameRoomSessionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

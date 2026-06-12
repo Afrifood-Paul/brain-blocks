@@ -1,14 +1,21 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Search, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "react-toastify";
 
+import NotificationsBell from "@/components/NotificationsBell";
+import InviteForm from "@/components/InviteForm";
 import { DEFAULT_GAME_STAKE, findGameById } from "@/constants/games";
 import { useAuth } from "@/context/AuthContext";
-import { apiClient, type Invite, type OnlineUser } from "@/services/api";
-import NotificationsBell from "@/components/NotificationsBell";
-import InviteForm from "../components/InviteForm";
-import { requireAuth } from "@/router/guards";
 import { ProtectedRoute } from "@/router/ProtectedRoute";
+import { requireAuth } from "@/router/guards";
+import {
+  apiClient,
+  type OnlineUser,
+  type PaginationMeta,
+  type Session,
+  type SessionStatus,
+} from "@/services/api";
 
 export const Route = createFileRoute("/game-lobby")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -23,17 +30,30 @@ export const Route = createFileRoute("/game-lobby")({
   ),
 });
 
-const fallbackPlayers: OnlineUser[] = [
-  { _id: "mock-akinyemi", username: "Akinyemi", email: "", isOnline: true },
-  { _id: "mock-paul", username: "Paul", email: "", isOnline: false },
-  { _id: "mock-david", username: "David", email: "", isOnline: true },
-  { _id: "mock-blessing", username: "Blessing", email: "", isOnline: true },
-];
-
 const getUserId = (user: { _id?: string; id?: string } | null) => user?._id || user?.id || "";
+
+const emptyPagination: PaginationMeta = {
+  page: 1,
+  limit: 5,
+  total: 0,
+  totalPages: 0,
+};
+
+const normalizeOnlineUsers = (users: OnlineUser[]) =>
+  Array.from(new Map(users.map((onlineUser) => [onlineUser._id, onlineUser])).values());
 
 export default function GameLobby() {
   const [activeTab, setActiveTab] = useState<"games" | "invite">("games");
+  const [sessionStatus, setSessionStatus] = useState<SessionStatus | "">("");
+  const [sessionPage, setSessionPage] = useState(1);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessionsPagination, setSessionsPagination] = useState(emptyPagination);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+  const [onlinePagination, setOnlinePagination] = useState(emptyPagination);
+  const [onlinePage, setOnlinePage] = useState(1);
+  const [onlineSearch, setOnlineSearch] = useState("");
+  const [loadingOnlineUsers, setLoadingOnlineUsers] = useState(false);
   const { user } = useAuth();
   const userId = getUserId(user);
   const { gameId, gameName } = Route.useSearch();
@@ -43,136 +63,132 @@ export default function GameLobby() {
     name: gameName || "Ludo",
     stake: DEFAULT_GAME_STAKE,
   };
-  // const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>(fallbackPlayers);
-  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
-  const [loadingOnlineUsers, setLoadingOnlineUsers] = useState(true);
-  const [invites, setInvites] = useState<Invite[]>([]);
-  const [loadingInvites, setLoadingInvites] = useState(false);
   const navigate = useNavigate();
 
-  const loadInvites = useCallback(
+  const loadSessions = useCallback(
     async (force = false) => {
       if (!userId) return;
 
-      setLoadingInvites(true);
+      setLoadingSessions(true);
       try {
-        const res = await apiClient.getInvites(userId, force);
-        setInvites(res.invites || []);
+        const res = await apiClient.getSessions(
+          {
+            status: sessionStatus,
+            gameId: lobbyGame.id,
+            page: sessionPage,
+            limit: 5,
+          },
+          force,
+        );
+        setSessions(res.sessions || []);
+        setSessionsPagination(res.pagination || emptyPagination);
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Unable to load invites");
+        toast.error(error instanceof Error ? error.message : "Unable to load sessions");
       } finally {
-        setLoadingInvites(false);
+        setLoadingSessions(false);
       }
     },
-    [userId],
+    [lobbyGame.id, sessionPage, sessionStatus, userId],
+  );
+
+  const loadOnlineUsers = useCallback(
+    async (force = false) => {
+      setLoadingOnlineUsers(true);
+      try {
+        const res = await apiClient.getOnlineUsers(
+          {
+            search: onlineSearch,
+            gameId: lobbyGame.id,
+            page: onlinePage,
+            limit: 5,
+          },
+          force,
+        );
+        setOnlineUsers(normalizeOnlineUsers(res.users || []));
+        setOnlinePagination(res.pagination || emptyPagination);
+      } catch (error) {
+        setOnlineUsers([]);
+        toast.error(error instanceof Error ? error.message : "Unable to load online players");
+      } finally {
+        setLoadingOnlineUsers(false);
+      }
+    },
+    [lobbyGame.id, onlinePage, onlineSearch],
   );
 
   useEffect(() => {
-    loadInvites();
-  }, [loadInvites]);
+    loadSessions(true);
 
-  // useEffect(() => {
-  //   let active = true;
-
-  //   const loadOnlineUsers = async () => {
-  //     try {
-  //       const res = await apiClient.getOnlineUsers(true);
-  //       if (active && res.users?.length) {
-  //         setOnlineUsers(res.users);
-  //       }
-  //     } catch {
-  //       if (active) setOnlineUsers(fallbackPlayers);
-  //     }
-  //   };
-
-  //   loadOnlineUsers();
-  //   const interval = window.setInterval(loadOnlineUsers, 60000);
-
-  //   return () => {
-  //     active = false;
-  //     window.clearInterval(interval);
-  //   };
-  // }, []);
-
-  useEffect(() => {
-    let active = true;
-
-    const loadOnlineUsers = async () => {
-      try {
-        setLoadingOnlineUsers(true);
-
-        const res = await apiClient.getOnlineUsers(true);
-
-        if (active) {
-          setOnlineUsers(res.users || []);
-        }
-      } catch (error) {
-        if (active) {
-          setOnlineUsers([]);
-          console.error(error);
-        }
-      } finally {
-        if (active) setLoadingOnlineUsers(false);
-      }
+    // Session state is backend-owned; poll less aggressively and pause while hidden.
+    const refreshVisibleSessions = () => {
+      if (!document.hidden) loadSessions(true);
     };
-
-    loadOnlineUsers();
-
-    const interval = window.setInterval(loadOnlineUsers, 60000);
+    const interval = window.setInterval(refreshVisibleSessions, 45000);
+    document.addEventListener("visibilitychange", refreshVisibleSessions);
 
     return () => {
-      active = false;
       window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshVisibleSessions);
     };
-  }, []);
+  }, [loadSessions]);
 
-  const updateInviteStatus = async (inviteId: string, action: "accept" | "decline") => {
+  useEffect(() => {
+    loadOnlineUsers(true);
+    const interval = window.setInterval(() => loadOnlineUsers(true), 30000);
+    return () => window.clearInterval(interval);
+  }, [loadOnlineUsers]);
+
+  useEffect(() => {
+    apiClient.updatePresence(true, lobbyGame.id).catch(() => undefined);
+    return () => {
+      apiClient.updatePresence(true, null).catch(() => undefined);
+    };
+  }, [lobbyGame.id]);
+
+  const updateInviteStatus = async (session: Session, action: "accept" | "decline") => {
     try {
-      const res =
-        action === "accept"
-          ? await apiClient.acceptInvite(inviteId)
-          : await apiClient.declineInvite(inviteId);
+      if (action === "accept") {
+        const res = await apiClient.acceptInvite(session._id);
+        const sessionId =
+          res.session?.sessionId || res.session?._id || res.invite.sessionId || res.invite._id;
+        toast.success("Invite accepted");
+        navigate({ to: "/game-room/$sessionId", params: { sessionId } });
+        return;
+      }
 
-      setInvites((current) =>
-        current.map((invite) => (invite._id === inviteId ? res.invite : invite)),
-      );
-      toast.success(action === "accept" ? "Invite accepted" : "Invite declined");
+      await apiClient.declineInvite(session._id);
+      await loadSessions(true);
+      toast.success("Invite declined");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to update invite");
     }
   };
 
+  const deleteSession = async (sessionId: string) => {
+    try {
+      await apiClient.deleteSession(sessionId);
+      setSessions((current) => current.filter((session) => session._id !== sessionId));
+      toast.success("Game deleted");
+      await loadSessions(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to delete game");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white px-4 py-6">
-      <div className="max-w-md mx-auto">
-        <div className="mb-4 flex justify-between items-center">
+    <div className="min-h-screen bg-black px-4 py-6 text-white">
+      <div className="mx-auto max-w-md">
+        <div className="mb-4 flex items-center justify-between">
           <button
             onClick={() => navigate({ to: "/dashboard" })}
-            className="py-2 px-4 border border-[#0B2177] cursor-pointer bg-[#0B2177]"
+            className="bg-[#0B2177] px-4 py-2 text-sm font-semibold"
           >
             Dashboard
           </button>
           <NotificationsBell userId={userId} />
         </div>
 
-        {/* <section className="mb-5 rounded-3xl bg-[#111] p-5">
-          <p className="text-xs uppercase tracking-wide text-[#9FC8F6]">Selected Game</p>
-          <div className="mt-2 flex items-end justify-between gap-3">
-            <div>
-              <h1 className="text-2xl font-bold">{lobbyGame.name}</h1>
-              <p className="mt-1 text-sm text-gray-400">Fixed stake: ₦{lobbyGame.stake}</p>
-            </div>
-            <button
-              onClick={() => setActiveTab("invite")}
-              className="rounded-full bg-[#385FF4] px-4 py-2 text-xs font-semibold"
-            >
-              Invite
-            </button>
-          </div>
-        </section> */}
-
-        {/* Tabs */}
-        <div className="grid grid-cols-2 border border-[#0B2177] overflow-hidden mb-6">
+        <div className="mb-6 grid grid-cols-2 overflow-hidden border border-[#0B2177]">
           <button
             onClick={() => setActiveTab("games")}
             className={`py-3 font-medium transition-colors ${
@@ -181,89 +197,106 @@ export default function GameLobby() {
           >
             My Games
           </button>
-
           <button
             onClick={() => setActiveTab("invite")}
             className={`py-3 font-medium transition-colors ${
               activeTab === "invite" ? "bg-[#0B2177] text-[#CBE8FF]" : "bg-[#121212] text-[#CBE8FF]"
             }`}
           >
-            Invite a Friend
+            Invite
           </button>
         </div>
 
-        {/* GAMES TAB */}
         {activeTab === "games" && (
-          <>
-            {/* My Games Card */}
-            <div className="bg-[#111] rounded-3xl p-6 mb-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-2xl font-bold">My Games</h2>
-                {loadingInvites && <span className="text-xs text-gray-400">Loading...</span>}
+          <div className="space-y-6">
+            <section className="bg-[#111] p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-xl font-bold">My Games</h2>
+                {loadingSessions && <span className="text-xs text-gray-400">Syncing...</span>}
               </div>
 
+              <select
+                value={sessionStatus}
+                onChange={(event) => {
+                  setSessionStatus(event.target.value as SessionStatus | "");
+                  setSessionPage(1);
+                }}
+                className="mb-4 w-full bg-[#EDEDED] px-4 py-3 text-sm text-slate-900 outline-none"
+              >
+                <option value="">All statuses</option>
+                <option value="pending">Pending</option>
+                <option value="accepted">Accepted</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+              </select>
+
               <div>
-                {invites.length ? (
-                  invites.map((invite) => {
-                    const isReceived = String(invite.invitedUserId || "") === String(userId);
+                {sessions.length ? (
+                  sessions.map((session) => {
+                    const isReceived = String(session.invitedUserId || "") === String(userId);
+                    const opponent = isReceived
+                      ? session.inviter?.username || "Opponent"
+                      : session.invitedUser?.username || session.invitedUsername;
 
                     return (
                       <GameRow
-                        key={invite._id}
-                        title={`${invite.gameName} vs @${invite.invitedUsername}`}
-                        status={`${isReceived ? "Invitation received" : "Invitation sent"} - ${
-                          invite.status
-                        }`}
+                        key={session._id}
+                        title={`${session.gameName} vs @${opponent}`}
+                        status={`${isReceived ? "Received" : "Sent"} - ${session.status}`}
                         statusColor={
-                          invite.status === "declined" ? "text-red-500" : "text-[#1688D1]"
+                          session.status === "declined" ? "text-red-500" : "text-[#1688D1]"
                         }
                         action={
-                          isReceived && invite.status === "pending" ? (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => updateInviteStatus(invite._id, "accept")}
-                                className="bg-[#47B312] px-4 py-1.5 rounded-full text-xs"
-                              >
-                                Accept
-                              </button>
-
-                              <button
-                                onClick={() => updateInviteStatus(invite._id, "decline")}
-                                className="bg-[#FF0000] px-4 py-1.5 rounded-full text-xs"
-                              >
-                                Decline
-                              </button>
-                            </div>
-                          ) : undefined
+                          <SessionActions
+                            isReceived={isReceived}
+                            session={session}
+                            onAccept={() => updateInviteStatus(session, "accept")}
+                            onDecline={() => updateInviteStatus(session, "decline")}
+                            onDelete={() => deleteSession(session._id)}
+                            onJoin={() =>
+                              navigate({
+                                to: "/game-room/$sessionId",
+                                params: { sessionId: session.sessionId || session._id },
+                              })
+                            }
+                          />
                         }
                       />
                     );
                   })
                 ) : (
-                  <p className="rounded bg-black/30 p-4 text-center text-sm text-gray-400">
-                    No game invites yet.
+                  <p className="bg-black/30 p-4 text-center text-sm text-gray-400">
+                    No sessions found.
                   </p>
                 )}
               </div>
-            </div>
 
-            {/* Online Players */}
-            {/* <div className="bg-[#111] rounded-3xl p-6">
-              <h2 className="text-2xl font-bold mb-6">Online Players</h2>
+              <Pager
+                page={sessionsPagination.page}
+                totalPages={sessionsPagination.totalPages}
+                onPrevious={() => setSessionPage((page) => Math.max(page - 1, 1))}
+                onNext={() =>
+                  setSessionPage((page) =>
+                    Math.min(page + 1, sessionsPagination.totalPages || page),
+                  )
+                }
+              />
+            </section>
 
-              {onlineUsers.map((onlineUser) => (
-                <PlayerRow
-                  key={onlineUser._id}
-                  username={`@${onlineUser.username}`}
-                  gamesPlayed="Ready to play"
-                  status={onlineUser.isOnline ? "Online" : "Away"}
-                  onInvite={() => setActiveTab("invite")}
+            <section className="bg-[#111] p-5">
+              <h2 className="mb-4 text-xl font-bold">Online Players</h2>
+              <label className="mb-4 flex items-center gap-2 bg-[#EDEDED] px-4 py-3 text-slate-900">
+                <Search className="h-4 w-4 text-slate-500" />
+                <input
+                  value={onlineSearch}
+                  onChange={(event) => {
+                    setOnlineSearch(event.target.value);
+                    setOnlinePage(1);
+                  }}
+                  placeholder="Search players"
+                  className="min-w-0 flex-1 bg-transparent text-sm outline-none"
                 />
-              ))}
-            </div> */}
-
-            <div className="bg-[#111] rounded-3xl p-6">
-              <h2 className="text-2xl font-bold mb-6">Online Players</h2>
+              </label>
 
               {loadingOnlineUsers ? (
                 <p className="text-sm text-gray-400">Loading online players...</p>
@@ -272,7 +305,6 @@ export default function GameLobby() {
                   <PlayerRow
                     key={onlineUser._id}
                     username={`@${onlineUser.username}`}
-                    gamesPlayed="Ready to play"
                     status={onlineUser.isOnline ? "Online" : "Away"}
                     onInvite={() => setActiveTab("invite")}
                   />
@@ -280,15 +312,21 @@ export default function GameLobby() {
               ) : (
                 <p className="text-sm text-gray-400">No online players found.</p>
               )}
-            </div>
-          </>
+
+              <Pager
+                page={onlinePagination.page}
+                totalPages={onlinePagination.totalPages}
+                onPrevious={() => setOnlinePage((page) => Math.max(page - 1, 1))}
+                onNext={() =>
+                  setOnlinePage((page) => Math.min(page + 1, onlinePagination.totalPages || page))
+                }
+              />
+            </section>
+          </div>
         )}
 
-        {/* INVITE FRIEND TAB */}
         {activeTab === "invite" && (
-          <div>
-            <InviteForm selectedGameId={lobbyGame.id} onInviteCreated={() => loadInvites(true)} />
-          </div>
+          <InviteForm selectedGameId={lobbyGame.id} onInviteCreated={() => loadSessions(true)} />
         )}
       </div>
     </div>
@@ -305,43 +343,128 @@ type GameRowProps = {
 function GameRow({ title, status, statusColor, action }: GameRowProps) {
   return (
     <div className="flex items-center border-b border-gray-800 py-4 last:border-b-0">
-      <p className="w-[35%] text-sm text-white truncate">{title}</p>
-
-      <p className={`flex-1 text-xs italic truncate ${statusColor}`}>{status}</p>
-
+      <p className="w-[38%] truncate text-sm text-white">{title}</p>
+      <p className={`flex-1 truncate text-xs italic ${statusColor}`}>{status}</p>
       {action && <div className="ml-3 shrink-0">{action}</div>}
     </div>
   );
 }
 
+type SessionActionsProps = {
+  isReceived: boolean;
+  session: Session;
+  onAccept: () => void;
+  onDecline: () => void;
+  onDelete: () => void;
+  onJoin: () => void;
+};
+
+function SessionActions({
+  isReceived,
+  session,
+  onAccept,
+  onDecline,
+  onDelete,
+  onJoin,
+}: SessionActionsProps) {
+  if (isReceived && session.status === "pending") {
+    return (
+      <div className="flex gap-2">
+        <button onClick={onAccept} className="bg-[#47B312] px-3 py-1.5 text-xs font-semibold">
+          Accept
+        </button>
+        <button onClick={onDecline} className="bg-red-600 px-3 py-1.5 text-xs font-semibold">
+          Decline
+        </button>
+      </div>
+    );
+  }
+
+  if (session.status === "accepted" || session.status === "active") {
+    return (
+      <div className="flex items-center gap-2">
+        <button onClick={onJoin} className="bg-[#385FF4] px-3 py-1.5 text-xs font-semibold">
+          Join Game
+        </button>
+        {!session.startedAt && (
+          <button
+            onClick={onDelete}
+            className="bg-[#1C1C1E] p-1.5 text-red-300"
+            aria-label="Delete game"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  if (session.status === "pending") {
+    return (
+      <button
+        onClick={onDelete}
+        className="bg-[#1C1C1E] p-1.5 text-red-300"
+        aria-label="Delete game"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    );
+  }
+
+  return null;
+}
+
 type PlayerRowProps = {
   username: string;
-  gamesPlayed: string;
   status: string;
   onInvite?: () => void;
 };
 
-function PlayerRow({ username, gamesPlayed, status, onInvite }: PlayerRowProps) {
+function PlayerRow({ username, status, onInvite }: PlayerRowProps) {
   return (
     <div className="flex items-center border-b border-gray-800 py-4 last:border-b-0">
-      <span className="w-[30%] text-sm text-white truncate">{username}</span>
-
-      <span className="w-[35%] text-xs text-gray-400 truncate">{gamesPlayed}</span>
-
+      <span className="w-[42%] truncate text-sm text-white">{username}</span>
       <span
-        className={`w-[15%] text-xs ${status === "Online" ? "text-green-500" : "text-yellow-500"}`}
+        className={`flex-1 text-xs ${status === "Online" ? "text-green-500" : "text-yellow-500"}`}
       >
         {status}
       </span>
+      <button onClick={onInvite} className="bg-[#1C1C1E] px-4 py-1.5 text-xs text-[#1688D1]">
+        Invite
+      </button>
+    </div>
+  );
+}
 
-      <div className="w-[20%] flex justify-end">
-        <button
-          onClick={onInvite}
-          className="bg-[#1C1C1E] text-[#1688D1] px-4 py-1.5 rounded-full text-xs"
-        >
-          Invite
-        </button>
-      </div>
+type PagerProps = {
+  page: number;
+  totalPages: number;
+  onPrevious: () => void;
+  onNext: () => void;
+};
+
+function Pager({ page, totalPages, onPrevious, onNext }: PagerProps) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="mt-4 flex items-center justify-between text-xs text-gray-300">
+      <button
+        onClick={onPrevious}
+        disabled={page <= 1}
+        className="bg-[#1C1C1E] px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Previous
+      </button>
+      <span>
+        Page {page} of {totalPages}
+      </span>
+      <button
+        onClick={onNext}
+        disabled={page >= totalPages}
+        className="bg-[#1C1C1E] px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Next
+      </button>
     </div>
   );
 }

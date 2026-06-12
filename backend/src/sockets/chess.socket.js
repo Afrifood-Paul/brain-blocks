@@ -10,7 +10,7 @@ const {
 } = require("../utils/wallet");
 
 const STARTING_FEN = new Chess().fen();
-const DEFAULT_TIME_SECONDS = 600;
+const TURN_TIME_SECONDS = 60;
 const activeSocketsByUser = new Map();
 const gameLocks = new Map();
 const timersByGame = new Map();
@@ -66,15 +66,20 @@ const applyTimer = (game, now = new Date()) => {
 
   const elapsed = Math.max(0, Math.floor((now.getTime() - game.timerStartedAt.getTime()) / 1000));
 
-  const duration = game.duration || DEFAULT_TIME_SECONDS;
-  const sharedTime = Math.max(0, duration - elapsed);
+  const sharedTime = Math.max(0, TURN_TIME_SECONDS - elapsed);
 
   game.sharedTime = sharedTime;
   game.whiteTime = sharedTime;
   game.blackTime = sharedTime;
 
   if (sharedTime === 0) {
-    game.status = "draw";
+    // Turn timer expiry passes control instead of ending the overall chess game.
+    game.currentTurn = game.currentTurn === "w" ? "b" : "w";
+    game.sharedTime = TURN_TIME_SECONDS;
+    game.whiteTime = TURN_TIME_SECONDS;
+    game.blackTime = TURN_TIME_SECONDS;
+    game.timerStartedAt = now;
+    game.lastTimerStartedAt = now;
   }
 };
 
@@ -170,9 +175,9 @@ const serializeGame = (game) => ({
   moveHistory: game.moveHistory,
   currentTurn: game.currentTurn,
   turn: game.currentTurn,
-  sharedTime: game.sharedTime ?? game.duration ?? DEFAULT_TIME_SECONDS,
-  whiteTime: game.sharedTime ?? game.whiteTime ?? DEFAULT_TIME_SECONDS,
-  blackTime: game.sharedTime ?? game.blackTime ?? DEFAULT_TIME_SECONDS,
+  sharedTime: game.sharedTime ?? TURN_TIME_SECONDS,
+  whiteTime: game.sharedTime ?? game.whiteTime ?? TURN_TIME_SECONDS,
+  blackTime: game.sharedTime ?? game.blackTime ?? TURN_TIME_SECONDS,
   timerStartedAt: game.timerStartedAt,
   status: game.status,
   winnerColor: getWinnerColor(game),
@@ -341,9 +346,10 @@ const getOrCreateGame = async (gameId) => {
       gameId,
       boardState: STARTING_FEN,
       currentTurn: "w",
-      sharedTime: DEFAULT_TIME_SECONDS,
-      whiteTime: DEFAULT_TIME_SECONDS,
-      blackTime: DEFAULT_TIME_SECONDS,
+      duration: TURN_TIME_SECONDS,
+      sharedTime: TURN_TIME_SECONDS,
+      whiteTime: TURN_TIME_SECONDS,
+      blackTime: TURN_TIME_SECONDS,
       timerStartedAt: null,
       lastTimerStartedAt: null,
       status: "active",
@@ -442,6 +448,12 @@ module.exports = (io) => {
 
           socket.data.gameId = gameId;
           socket.join(getRoomName(gameId));
+          if (hasBothPlayers(game) && !game.timerStartedAt) {
+            // Start the 60s turn timer only after both players have joined the room.
+            game.timerStartedAt = new Date();
+            game.lastTimerStartedAt = game.timerStartedAt;
+            game.sharedTime = TURN_TIME_SECONDS;
+          }
           applyTimer(game);
 
           if (game.isModified()) {
@@ -502,12 +514,11 @@ module.exports = (io) => {
           game.currentTurn = chess.turn();
           game.status = resolveStatus(chess);
           const moveTime = new Date();
-          if (!game.timerStartedAt) {
-            game.timerStartedAt = moveTime;
-            game.sharedTime = game.duration || DEFAULT_TIME_SECONDS;
-            game.whiteTime = game.sharedTime;
-            game.blackTime = game.sharedTime;
-          }
+          // A successful move hands the turn to the opponent and resets their 60s clock.
+          game.timerStartedAt = moveTime;
+          game.sharedTime = TURN_TIME_SECONDS;
+          game.whiteTime = TURN_TIME_SECONDS;
+          game.blackTime = TURN_TIME_SECONDS;
           game.lastTimerStartedAt = moveTime;
           game.moveHistory.push({
             from: result.from,

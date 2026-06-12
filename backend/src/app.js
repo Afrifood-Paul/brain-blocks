@@ -19,6 +19,7 @@ app.use("/api/marketplace", require("./routes/marketplaceRoutes"));
 app.use("/api/packages", require("./routes/packageRoutes"));
 app.use("/api/purchase", require("./routes/purchaseRoutes"));
 app.use("/api/invites", require("./routes/inviteRoutes"));
+app.use("/api/sessions", require("./routes/sessionRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/users", require("./routes/presenceRoutes"));
 
