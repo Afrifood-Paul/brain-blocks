@@ -10,6 +10,10 @@ export type MarketItemData = {
   img: string;
 };
 
+import playIcon from "../assets/how-it-works-1.svg";
+import coinIcon from "../assets/how-it-works-2.svg";
+import rewardIcon from "../assets/how-it-works-3.svg";
+
 export const NAV_LINKS = ["Home", "Blog", "Games", "Market", "Contact Us"] as const;
 
 export const GAME_GENRES: GameGenre[] = [
@@ -92,24 +96,24 @@ export const MARKET_ITEMS: MarketItemData[] = [
 
 export const HOW_IT_WORKS = [
   {
-    icon: "🎮",
+    icon: playIcon,
     title: "Play Games",
     sub: "100% Free,\nNo Entry Fees",
   },
   {
-    icon: "🪙",
+    icon: coinIcon,
     title: "Earn Coins",
     sub: "Play Games,\nComplete Task",
   },
   {
-    icon: "🛒",
+    icon: rewardIcon,
     title: "Redeem Rewards",
     sub: "Convert to cash, airtime,\nGadgets & more",
   },
 ];
 
 export const FOOTER_COLS = [
-  { title: "Platform", links: ["Games", "Market Place", "Leaderboard", "Tournaments"] },
-  { title: "Account", links: ["Log in", "Register", "Withdraw", "Fund Wallet"] },
-  { title: "Support", links: ["Help Center", "Contact Us", "Privacy Policy", "Terms"] },
+  { title: "Menu", links: ["Order tracking", "Store location", "Return policy", "Support"] },
+  { title: "Resources", links: ["Blog", "Help center", "Documentation", "Guidelines"] },
+  // { title: "Support", links: ["Help Center", "Contact Us", "Privacy Policy", "Terms"] },
 ];

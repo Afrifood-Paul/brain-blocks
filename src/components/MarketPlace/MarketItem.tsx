@@ -9,14 +9,15 @@ export default function MarketItem({ item, onAdd }: MarketItemProps) {
   const { name, coins, category, img } = item;
 
   return (
-    <article className="group overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-      <div className="relative">
-        <img
-          src={img}
-          alt={name}
-          loading="lazy"
-          className="block h-44 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+    <article className="group flex flex-col border-[0.3px] border-[#D1D1D1] rounded-[8px] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md px-[16px] py-[24px] gap-[15px]">
+      <img
+        src={img}
+        alt={name}
+        loading="lazy"
+        className="block h-44 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+      />
+      {/* <div className="relative">
+       
 
         <button
           onClick={onAdd}
@@ -25,14 +26,14 @@ export default function MarketItem({ item, onAdd }: MarketItemProps) {
         >
           +
         </button>
+      </div> */}
+
+      <div className="flex flex-col gap-[14px]">
+        <p className="truncate text-sm font-bold text-gray-900">{name}</p>
+
+        <p className="text-[11px] font-semibold text-indigo-600">{coins}</p>
       </div>
-
-      <div className="p-3">
-        <p className="mb-0.5 truncate text-sm font-bold text-gray-900">{name}</p>
-
-        <p className="mb-2 text-[11px] font-semibold text-indigo-600">{coins}</p>
-
-        <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">
             {category}
           </span>
@@ -43,8 +44,7 @@ export default function MarketItem({ item, onAdd }: MarketItemProps) {
           >
             Redeem
           </button>
-        </div>
-      </div>
+        </div> */}
     </article>
   );
 }

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import Home from "@/pages/home/Home";
 import { createFileRoute } from "@tanstack/react-router";
 

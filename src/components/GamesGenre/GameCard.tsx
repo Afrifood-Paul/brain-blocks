@@ -8,19 +8,19 @@ export default function GameCard({ game }: GameCardProps) {
   const { name, img } = game;
 
   return (
-    <article className="group relative min-h-28 overflow-hidden rounded-xl">
+    <div className="relative w-full aspect-square rounded-[6px] overflow-hidden shadow-lg flex items-center justify-center group">
       <img
         src={img}
         alt={name}
         loading="lazy"
-        className="block h-28 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
       />
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+      <div className="absolute inset-0 bg-black/70 transition-opacity duration-300 group-hover:bg-black/40" />
 
-      <span className="absolute bottom-2.5 left-0 right-0 px-2 text-center text-sm font-bold tracking-wide text-white drop-shadow">
+      <span className="relative z-10 text-center text-2xl font-bold tracking-wide text-white drop-shadow-md">
         {name}
       </span>
-    </article>
+    </div>
   );
 }

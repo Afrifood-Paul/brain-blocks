@@ -7,7 +7,7 @@ interface MarketPlaceProps {
 
 export default function MarketPlace({ onAdd }: MarketPlaceProps) {
   return (
-    <section className="bg-slate-50 px-4 py-14 sm:px-6">
+    <section className="py-14 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex items-center justify-between gap-4">
           <h2 className="text-2xl font-black tracking-tight text-gray-900">Market Place</h2>
