@@ -4,15 +4,10 @@ import { toast } from "react-toastify";
 import { DEFAULT_GAME_STAKE, GAMES, findGameById } from "@/constants/games";
 import { apiClient, type Invite } from "@/services/api";
 import { copyToClipboard } from "@/utils/copyToClipboard";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import dropdownIcon from "../assets/arrowdown.png";
+import shareIcon from "../assets/shareReferralIcon.png";
+import copyIcon from "../assets/copyrefferalIcon.png";
 
 type InviteFormProps = {
   selectedGameId?: string;
@@ -71,11 +66,50 @@ export default function InviteForm({ selectedGameId, onInviteCreated }: InviteFo
     }
   };
 
+  // const handleCopyInvite = async () => {
+  //   if (!createdInvite?.inviteLink) return;
+
+  //   await copyToClipboard(createdInvite.inviteLink);
+  //   toast.success("Invite link copied");
+  // };
+
   const handleCopyInvite = async () => {
-    if (!createdInvite?.inviteLink) return;
+    if (!createdInvite?.inviteLink) {
+      toast.error("No invite link available");
+      return;
+    }
 
     await copyToClipboard(createdInvite.inviteLink);
     toast.success("Invite link copied");
+  };
+
+  const handleShareInvite = async () => {
+    if (!createdInvite?.inviteLink) {
+      toast.error("No invite link available");
+      return;
+    }
+
+    const shareData = {
+      title: `${createdInvite.gameName} Invitation`,
+      text: `Join my ${createdInvite.gameName} game!`,
+      url: createdInvite.inviteLink,
+    };
+
+    // ❗ ONLY check support
+    if (!navigator.share) {
+      await copyToClipboard(createdInvite.inviteLink);
+      toast.info("Sharing not supported. Link copied instead");
+      return;
+    }
+
+    try {
+      await navigator.share(shareData);
+    } catch (err) {
+      // User cancelled share → DO NOTHING
+      if ((err as any)?.name === "AbortError") return;
+
+      toast.error("Unable to share");
+    }
   };
 
   return (
@@ -138,39 +172,49 @@ export default function InviteForm({ selectedGameId, onInviteCreated }: InviteFo
         open={Boolean(createdInvite)}
         onOpenChange={(open) => !open && setCreatedInvite(null)}
       >
-        <DialogContent className="bg-white text-slate-950">
-          <DialogHeader>
-            <DialogTitle>Invite Successful</DialogTitle>
-            <DialogDescription>
-              {createdInvite
-                ? `${createdInvite.gameName} invite sent to @${createdInvite.invitedUsername}.`
-                : ""}
-            </DialogDescription>
-          </DialogHeader>
-
-          {createdInvite && (
-            <div className="space-y-3 rounded bg-slate-100 p-3 text-sm">
-              <p className="font-medium text-slate-800">{createdInvite.gameName}</p>
-              <p className="break-all text-slate-600">{createdInvite.inviteLink}</p>
-            </div>
-          )}
-
-          <DialogFooter>
+        <DialogContent className="border-none bg-transparent shadow-none p-0 max-w-md">
+          {/* Back Button */}
+          <div className="flex justify-end mb-4">
             <button
               type="button"
-              onClick={handleCopyInvite}
-              className="rounded bg-[#0B2177] px-4 py-2 text-sm font-semibold text-white"
+              onClick={() => {
+                setCreatedInvite(null);
+                window.location.href = "/dashboard";
+                // or navigate({ to: "/dashboard" })
+              }}
+              className="bg-[#0B2177] text-white px-6 py-3 text-sm font-medium"
             >
-              Copy invite link
+              Back to Dashboard
             </button>
-            <button
-              type="button"
-              onClick={() => setCreatedInvite(null)}
-              className="rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
-            >
-              Close
-            </button>
-          </DialogFooter>
+          </div>
+
+          {/* Modal Card */}
+          <div className="bg-[#111111] rounded-2xl px-7 py-8">
+            <p className="text-white text-[18px] leading-9 font-normal">
+              An invitation has been sent to your friend. They will receive it in their
+              notifications.
+              <br />
+              You can also copy the link below to share it on WhatsApp.
+            </p>
+
+            {createdInvite && (
+              <div className="mt-8 bg-[#B9D5F7] rounded-md px-4 py-3 flex items-center justify-between gap-3">
+                <p className="text-[#0B2177] text-xs truncate flex-1">{createdInvite.inviteLink}</p>
+
+                <div className="flex items-center gap-2">
+                  {/* Copy */}
+                  <button onClick={handleCopyInvite} className="shrink-0">
+                    <img src={copyIcon} alt="Copy" className="w-4 h-4" />
+                  </button>
+
+                  {/* Share */}
+                  <button onClick={handleShareInvite} className="shrink-0">
+                    <img src={shareIcon} alt="Share" className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </>
