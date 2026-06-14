@@ -92,6 +92,10 @@ function GameRoom() {
   };
 
   const enterGame = () => {
+    if (!session) {
+      toast.error("Session unavailable");
+      return;
+    }
     if (!playRoute) {
       toast.error("REQUIRED BACKEND ENDPOINT: game launch route for this gameId is not configured");
       return;
