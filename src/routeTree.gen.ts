@@ -14,13 +14,13 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PicturepuzzleRouteImport } from './routes/picturepuzzle'
 import { Route as MyGamesRouteImport } from './routes/my-games'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
-import { Route as LudoRouteImport } from './routes/ludo'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as GameLobbyRouteImport } from './routes/game-lobby'
 import { Route as FundwalletRouteImport } from './routes/fundwallet'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChessboardRouteImport } from './routes/chessboard'
 import { Route as ChessRouteImport } from './routes/chess'
+import { Route as BoardludoRouteImport } from './routes/boardludo'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GameRoomSessionIdRouteImport } from './routes/game-room.$sessionId'
 
@@ -47,11 +47,6 @@ const MyGamesRoute = MyGamesRouteImport.update({
 const MarketplaceRoute = MarketplaceRouteImport.update({
   id: '/marketplace',
   path: '/marketplace',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LudoRoute = LudoRouteImport.update({
-  id: '/ludo',
-  path: '/ludo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -84,6 +79,11 @@ const ChessRoute = ChessRouteImport.update({
   path: '/chess',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BoardludoRoute = BoardludoRouteImport.update({
+  id: '/boardludo',
+  path: '/boardludo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -97,13 +97,13 @@ const GameRoomSessionIdRoute = GameRoomSessionIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/boardludo': typeof BoardludoRoute
   '/chess': typeof ChessRoute
   '/chessboard': typeof ChessboardRoute
   '/dashboard': typeof DashboardRoute
   '/fundwallet': typeof FundwalletRoute
   '/game-lobby': typeof GameLobbyRoute
   '/login': typeof LoginRoute
-  '/ludo': typeof LudoRoute
   '/marketplace': typeof MarketplaceRoute
   '/my-games': typeof MyGamesRoute
   '/picturepuzzle': typeof PicturepuzzleRoute
@@ -113,13 +113,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/boardludo': typeof BoardludoRoute
   '/chess': typeof ChessRoute
   '/chessboard': typeof ChessboardRoute
   '/dashboard': typeof DashboardRoute
   '/fundwallet': typeof FundwalletRoute
   '/game-lobby': typeof GameLobbyRoute
   '/login': typeof LoginRoute
-  '/ludo': typeof LudoRoute
   '/marketplace': typeof MarketplaceRoute
   '/my-games': typeof MyGamesRoute
   '/picturepuzzle': typeof PicturepuzzleRoute
@@ -130,13 +130,13 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/boardludo': typeof BoardludoRoute
   '/chess': typeof ChessRoute
   '/chessboard': typeof ChessboardRoute
   '/dashboard': typeof DashboardRoute
   '/fundwallet': typeof FundwalletRoute
   '/game-lobby': typeof GameLobbyRoute
   '/login': typeof LoginRoute
-  '/ludo': typeof LudoRoute
   '/marketplace': typeof MarketplaceRoute
   '/my-games': typeof MyGamesRoute
   '/picturepuzzle': typeof PicturepuzzleRoute
@@ -148,13 +148,13 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/boardludo'
     | '/chess'
     | '/chessboard'
     | '/dashboard'
     | '/fundwallet'
     | '/game-lobby'
     | '/login'
-    | '/ludo'
     | '/marketplace'
     | '/my-games'
     | '/picturepuzzle'
@@ -164,13 +164,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/boardludo'
     | '/chess'
     | '/chessboard'
     | '/dashboard'
     | '/fundwallet'
     | '/game-lobby'
     | '/login'
-    | '/ludo'
     | '/marketplace'
     | '/my-games'
     | '/picturepuzzle'
@@ -180,13 +180,13 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/boardludo'
     | '/chess'
     | '/chessboard'
     | '/dashboard'
     | '/fundwallet'
     | '/game-lobby'
     | '/login'
-    | '/ludo'
     | '/marketplace'
     | '/my-games'
     | '/picturepuzzle'
@@ -197,13 +197,13 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BoardludoRoute: typeof BoardludoRoute
   ChessRoute: typeof ChessRoute
   ChessboardRoute: typeof ChessboardRoute
   DashboardRoute: typeof DashboardRoute
   FundwalletRoute: typeof FundwalletRoute
   GameLobbyRoute: typeof GameLobbyRoute
   LoginRoute: typeof LoginRoute
-  LudoRoute: typeof LudoRoute
   MarketplaceRoute: typeof MarketplaceRoute
   MyGamesRoute: typeof MyGamesRoute
   PicturepuzzleRoute: typeof PicturepuzzleRoute
@@ -249,13 +249,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketplaceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/ludo': {
-      id: '/ludo'
-      path: '/ludo'
-      fullPath: '/ludo'
-      preLoaderRoute: typeof LudoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -298,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/boardludo': {
+      id: '/boardludo'
+      path: '/boardludo'
+      fullPath: '/boardludo'
+      preLoaderRoute: typeof BoardludoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -317,13 +317,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BoardludoRoute: BoardludoRoute,
   ChessRoute: ChessRoute,
   ChessboardRoute: ChessboardRoute,
   DashboardRoute: DashboardRoute,
   FundwalletRoute: FundwalletRoute,
   GameLobbyRoute: GameLobbyRoute,
   LoginRoute: LoginRoute,
-  LudoRoute: LudoRoute,
   MarketplaceRoute: MarketplaceRoute,
   MyGamesRoute: MyGamesRoute,
   PicturepuzzleRoute: PicturepuzzleRoute,
